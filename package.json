@@ -1,0 +1,21 @@
+{
+  "name": "cerebellum",
+  "version": "0.1.0",
+  "description": "Controls your isomorphic apps",
+  "scripts": {},
+  "author": "Lari Hoppula",
+  "license": "ISC",
+  "devDependencies": {},
+  "dependencies": {
+    "axios": "^0.3.1",
+    "cheerio": "^0.17.0",
+    "director": "^1.2.3",
+    "exoskeleton": "paulmillr/exoskeleton",
+    "express": "^4.9.4",
+    "native-promise-only": "^0.7.6-a"
+  },
+  "main": "index.js",
+  "browser": {
+    "./lib/server": false
+  }
+}
