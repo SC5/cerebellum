@@ -1,4 +1,5 @@
 # cerebellum
+Copyright (C) SC5 Online 2014
 
 Controls your isomorphic apps. 
 
