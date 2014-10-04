@@ -1,6 +1,9 @@
 # cerebellum
 
-Controls your isomorphic apps
+Controls your isomorphic apps. 
+
+Still under heavy development, expect breaking changes between 0.x releases.
+This repository will be moved to Github soon.
 
 ## What does it do?
 
