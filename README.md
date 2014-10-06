@@ -35,3 +35,5 @@ This repository will be moved to Github soon.
 
 * Example app with authentication & real API usage
 * Better documentation & introduction blog post
+* Store currently works properly only with static routes, add support for parameters, cache by url instead of store name
+* Write tests, especially for Store
