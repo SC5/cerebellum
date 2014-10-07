@@ -9,7 +9,8 @@
   "license": "ISC",
   "devDependencies": {
     "mocha": "^1.21.4",
-    "should": "^4.0.4"
+    "should": "^4.0.4",
+    "supertest": "^0.14.0"
   },
   "dependencies": {
     "axios": "^0.3.1",
