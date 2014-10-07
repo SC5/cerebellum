@@ -5,7 +5,10 @@
   "scripts": {},
   "author": "Lari Hoppula",
   "license": "ISC",
-  "devDependencies": {},
+  "devDependencies": {
+    "mocha": "^1.21.4",
+    "should": "^4.0.4"
+  },
   "dependencies": {
     "axios": "^0.3.1",
     "cheerio": "^0.17.0",
@@ -17,5 +20,9 @@
   "main": "index.js",
   "browser": {
     "./lib/server": false
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://bitbucket.org/SC5/cerebellum"
   }
 }
