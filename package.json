@@ -2,7 +2,9 @@
   "name": "cerebellum",
   "version": "0.2.0",
   "description": "Controls your isomorphic apps",
-  "scripts": {},
+  "scripts": {
+    "test": "mocha"
+  },
   "author": "Lari Hoppula",
   "license": "ISC",
   "devDependencies": {
@@ -15,7 +17,8 @@
     "director": "^1.2.3",
     "exoskeleton": "paulmillr/exoskeleton",
     "express": "^4.9.4",
-    "native-promise-only": "^0.7.6-a"
+    "native-promise-only": "^0.7.6-a",
+    "path-to-regexp": "^1.0.1"
   },
   "main": "index.js",
   "browser": {
