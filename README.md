@@ -1,7 +1,7 @@
 # cerebellum
 Copyright (C) SC5 Online 2014
 
-Controls your isomorphic apps. 
+Controls your isomorphic apps.
 
 Still under heavy development, expect breaking changes between 0.x releases.
 This repository will be moved to Github soon.
@@ -31,9 +31,27 @@ This repository will be moved to Github soon.
 
 * In route handler's **this** scope you have **this.store** which is the reference to Store instance, which contains all your stores. On the server Store is initialized for every request and on client it's created once in the application's initialization phase. Server exports store contents to JSON at the end of request and client bootstraps itself from that data.
 
+## Running tests
+
+Start test server for client tests
+
+    npm start
+
+Running client tests (requires test server to be up and running)
+
+    npm run test_client
+
+Running server tests
+
+    npm run test_server
+
+Running all tests (server & client)
+
+    npm run test
+
 ## TODO
 
 * Example app with authentication & real API usage
 * Better documentation & introduction blog post
 * Store currently works properly only with static routes, add support for parameters, cache by url instead of store name
-* Write tests, especially for Store
+* Write more tests, especially for Store

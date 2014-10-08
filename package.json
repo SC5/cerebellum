@@ -3,12 +3,20 @@
   "version": "0.2.0",
   "description": "Controls your isomorphic apps",
   "scripts": {
-    "test": "mocha"
+    "test_build": "browserify -u underscore -u jquery -s Cerebellum index.js -o test/client/cerebellum_test_build.js",
+    "test": "npm run test_server && npm run test_client",
+    "test_server": "mocha test/server",
+    "test_client": "npm run test_build && mocha-phantomjs -s loadImages=false http://localhost:8000/",
+    "start": "http-server test/client -p 8000"
   },
   "author": "Lari Hoppula",
   "license": "ISC",
   "devDependencies": {
+    "browserify": "^6.0.2",
+    "http-server": "^0.7.1",
     "mocha": "^1.21.4",
+    "mocha-phantomjs": "^3.5.0",
+    "phantomjs": "^1.9.10",
     "should": "^4.0.4",
     "supertest": "^0.14.0"
   },

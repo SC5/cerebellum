@@ -3,7 +3,7 @@ var should = require('should');
 var cheerio = require('cheerio');
 require('native-promise-only');
 
-var Server = require('../lib/server');
+var Server = require('../../lib/server');
 var options;
 
 var storeId = "app";

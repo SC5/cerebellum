@@ -1,6 +1,6 @@
 var should = require('should');
 
-var Utils = require('../lib/utils');
+var Utils = require('../../lib/utils');
 
 describe('Utils', function() {
   describe('extractParams', function() {

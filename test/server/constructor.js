@@ -1,6 +1,6 @@
 var should = require('should');
 
-var cerebellum = require('../index');
+var cerebellum = require('../../index');
 var options;
 
 describe('Constructor', function() {

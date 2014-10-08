@@ -1,2 +1,3 @@
 node_modules
 .DS_Store
+test/client/cerebellum_test_build.js
