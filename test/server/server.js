@@ -1,12 +1,17 @@
-var request = require('supertest');
 var should = require('should');
 var cheerio = require('cheerio');
 require('native-promise-only');
 
+var exoskeleton = require("../../lib/wrapper/exoskeleton");
 var Server = require('../../lib/server');
-var options;
+var Store = require('../../lib/store');
 
-var storeId = "app";
+var Collection = exoskeleton.Collection;
+var Model = exoskeleton.Model;
+var appId = "app";
+var storeId = "store_state_from_server";
+
+var options;
 
 describe('Server', function() {
 
@@ -14,17 +19,34 @@ describe('Server', function() {
     options = {
       storeId: storeId,
       render: function render(document, options) {
-        document("#"+storeId).html( options.value );
+        document("#"+appId).html( options.value );
         return document.html();
       },
       routes: {
         "/": function() {
           return new Promise(function(resolve, reject) {
-            resolve({value: "index content"});
+            resolve({value: "Index content"});
+          });
+        },
+        "/person": function() {
+          return this.store.fetch("person").then(function(person) {
+            return {value: person.get("value")};
           });
         }
       },
-      stores: {},
+      stores: {
+        person: Model.extend({
+          cacheKey: function() {
+            return "person";
+          },
+          fetch: function() {
+            this.set("value", "Example person");
+            return new Promise(function(resolve, reject) {
+              resolve();
+            });
+          }
+        })
+      },
       staticFiles: __dirname+"/public"
     };
   });
@@ -34,12 +56,34 @@ describe('Server', function() {
     (function() { new Server(options) }).should.throw();
   });
 
-  it('should render route handler\'s response to #app', function(done) {
+  it('should render route handler response without store calls but the exported JSON should be empty', function() {
     var app = new Server(options);
-    request(app).get("/").expect(function(res) {
-      cheerio("#"+storeId, res.text).text().should.equal("index content");
-    })
-    .end(done);
+
+    var res = {
+      setHeader: function() {},
+      send: function(html) {
+        cheerio("#"+appId, html).text().should.equal("Index content");
+        cheerio("#"+storeId, html).text().should.be.empty;
+        done();
+      }
+    };
+
+    app({ url: '/', method: 'GET', headers: {} }, res);
+  });
+
+  it('should render store.fetch return value and exported JSON should not be empty', function(done) {
+    var app = new Server(options);
+
+    var res = {
+      setHeader: function() {},
+      send: function(html) {
+        cheerio("#"+appId, html).text().should.equal("Example person");
+        cheerio("#"+storeId, html).text().should.not.be.empty;
+        done();
+      }
+    };
+
+    app({ url: '/person', method: 'GET', headers: {} }, res);
   });
 
 });
