@@ -19,7 +19,9 @@ This repository will be moved to Github soon.
 
 * Pass your collections and models in options as object (option.stores, see [sample app](https://bitbucket.org/SC5/cerebellum-app) for example). Store needs to have knowledge of all available collections&models for **import()** method.
 
-* You can retrieve data from store using **@store.fetch("storeId")**, it fetches the data from server or uses cached data.
+* You can retrieve data from store using **this.store.fetch(storeId, options)**, it fetches the data from server or uses cached data.
+
+* If your store needs to fetch dynamic data, pass options to **this.store.fetch** as second parameter. For example, if you need to fetch data by id, your options would be `{id: id}`. Then in your model or collection you'd have `cacheKey` method returning `this.storeOptions.id` as part of cache key.
 
 * Store caches are populated with **fetch()** or when calling **import()**
 
@@ -53,5 +55,4 @@ Running all tests (server & client)
 
 * Example app with authentication & real API usage
 * Better documentation & introduction blog post
-* Store currently works properly only with static routes, add support for parameters, cache by url instead of store name
 * Write more tests, especially for Store
