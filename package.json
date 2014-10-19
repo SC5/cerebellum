@@ -1,6 +1,6 @@
 {
   "name": "cerebellum",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Controls your isomorphic apps",
   "scripts": {
     "test_build": "browserify -u underscore -u jquery -s Cerebellum index.js -o test/client/cerebellum_test_build.js",
