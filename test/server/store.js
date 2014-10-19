@@ -13,11 +13,16 @@ var stores = {
   collection: Collection.extend({
     cacheKey: function() {
       return "collection";
+    },
+    fetch: function() {
+      return new Promise(function(resolve, reject) {
+        reject(new Error("Not authorized"));
+      });
     }
   }),
   car: Model.extend({
     cacheKey: function() {
-      return "car/"+this.storeOptions.id;
+      return this.storeOptions.id;
     },
     fetch: function() {
       this.set("manufacturer", this.storeOptions.id);
@@ -61,19 +66,42 @@ describe('Store', function() {
 
   describe('fetch', function() {
     it('should fetch from server if cache not found', function() {
-
+      var store = new Store(stores);
+      return store.fetch("car", {id: "Ferrari"}).then(function(result) {
+        result.storeOptions.should.have.property("id", "Ferrari");
+        result.get("manufacturer").should.be.equal("Ferrari");
+      });
     });
 
     it('should return cached value if found', function() {
+      var store = new Store(stores);
+
+      var lambo = store.get("car").clone();
+      lambo.set("manufacturer", "Lamborghini (not set by fetch)");
+      lambo.set("model", "Aventador");
+      store.cached["car"]["Lamborghini"] = lambo;
+
+      return store.fetch("car", {id: "Lamborghini"}).then(function(result) {
+        result.get("manufacturer").should.be.equal("Lamborghini (not set by fetch)");
+        result.get("model").should.be.equal("Aventador");
+      });
 
     });
 
     it('should return store object even if error occurs', function() {
-
+      var store = new Store(stores);
+      var original = store.get("collection").clone();
+      original.storeOptions = {};
+      return store.fetch("collection").then(function(result) {
+        original.should.eql(result);
+      });
     });
 
     it('should cache store value after server fetch', function() {
-
+      var store = new Store(stores);
+      return store.fetch("car", {id: "Ferrari"}).then(function(result) {
+        store.cached["car"]["Ferrari"].should.equal(result);
+      });
     });
 
     it('should throw error if store is not registered', function() {
@@ -121,15 +149,11 @@ describe('Store', function() {
   });
 
   describe('import', function() {
-    it('should set caches from initial JSON', function() {
-
-    });
+    it('should set caches from initial JSON');
   });
 
   describe('export', function() {
-    it('should export current cached stores to JSON', function() {
-
-    });
+    it('should export current cached stores to JSON');
   });
 
 });
