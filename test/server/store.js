@@ -149,11 +149,54 @@ describe('Store', function() {
   });
 
   describe('import', function() {
-    it('should set caches from initial JSON');
+    it('should set caches from initial JSON', function() {
+      var store = new Store(stores);
+      var json = JSON.stringify({
+        model: {},
+        collection: {},
+        car: {
+          "Ferrari": {manufacturer: "Ferrari"},
+          "Lotus": {manufacturer: "Lotus"}
+        }
+      });
+      store.import(json);
+
+      Object.keys(store.cached["car"]).length.should.be.equal(2);
+      Object.keys(store.cached["model"]).length.should.be.equal(0);
+      Object.keys(store.cached["collection"]).length.should.be.equal(0);
+      store.cached["car"]["Ferrari"].should.be.instanceOf(Model);
+      store.cached["car"]["Lotus"].should.be.instanceOf(Model);
+      store.cached["car"]["Ferrari"].get("manufacturer").should.be.equal("Ferrari");
+      store.cached["car"]["Lotus"].get("manufacturer").should.be.equal("Lotus");
+    });
   });
 
   describe('export', function() {
-    it('should export current cached stores to JSON');
+    it('should export current cached stores to JSON', function() {
+      var store = new Store(stores);
+      var expectedJSON = JSON.stringify({
+        model: {},
+        collection: {},
+        car: {
+          "Ferrari": {manufacturer: "Ferrari"},
+          "Lotus": {manufacturer: "Lotus"}
+        }
+      });
+
+      store.export().should.be.eql(JSON.stringify({
+        model: {},
+        collection: {},
+        car: {}
+      }));
+
+      return Promise.all([
+        store.fetch("car", {id: "Ferrari"}),
+        store.fetch("car", {id: "Lotus"}),
+        store.fetch("collection")
+      ]).then(function() {
+        store.export().should.be.eql(expectedJSON);
+      });
+    });
   });
 
 });
