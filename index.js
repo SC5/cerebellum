@@ -29,7 +29,8 @@ var cerebellum = {
     validateOptions(options);
     return client(options);
   },
-  exoskeleton: exoskeleton
+  Collection: exoskeleton.Collection,
+  Model: exoskeleton.Model
 };
 
 module.exports = cerebellum;
