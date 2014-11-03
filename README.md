@@ -1,17 +1,21 @@
 # cerebellum
 Copyright (C) SC5 Online 2014
 
-Controls your isomorphic apps.
+cerebellum is not a framework, it gives you a powerful set of tools for structuring your isomorphic application.
 
-Still under heavy development, expect breaking changes between 0.x releases.
+cerebellum works best for public facing single page apps that need search engine visibility.
+
+cerebellum is still under heavy development, expect breaking changes between 0.x releases.
+
 This repository will be moved to Github soon.
 
 ## What does it do?
 
 * Fully shared GET routes between server and client
 * Fully shared data collections between server and client, uses Exoskeleton's collection & model
-* Has Axios adapter for Exoskeleton, so you can use same AJAX methods on both server and client
+* Has Axios adapter for Exoskeleton, so you can use same REST API methods on both server and client
 * Stores collection/model state on server to JSON and browser client automatically bootstraps from that, no extra requests needed
+* Can be used with any framework that provides rendering for both client & server
 
 ## Store
 
@@ -31,7 +35,11 @@ This repository will be moved to Github soon.
 
 * Currently you need to wrap your route handlers to promises, router expects all handlers to return promises.
 
-* In route handler's **this** scope you have **this.store** which is the reference to Store instance, which contains all your stores. On the server Store is initialized for every request and on client it's created once in the application's initialization phase. Server exports store contents to JSON at the end of request and client bootstraps itself from that data.
+* In route handler's **this** scope you have **this.store** which is the reference to Store instance. It contains all your stores.
+
+* On the server Store is initialized for every request and on  the client it's created once in the application's initialization phase.
+
+* Server exports store contents to JSON at the end of request and client bootstraps itself from that data.
 
 ## Running tests
 
