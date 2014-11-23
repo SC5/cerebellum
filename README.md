@@ -1,45 +1,269 @@
-# cerebellum
-Copyright (C) SC5 Online 2014
+## cerebellum
 
-cerebellum is not a framework, it gives you a powerful set of tools for structuring your isomorphic application.
+cerebellum is a powerful set of tools that help you structure your isomorphic apps, just add your preferred view engine.
 
-cerebellum works best for public facing single page apps that need search engine visibility.
+With cerebellum you can fully share the code for your GET routes, same code works on server and client, perfect for single-page apps.
 
 cerebellum is still under heavy development, expect breaking changes between 0.x releases.
 
-This repository will be moved to Github soon.
-
-## What does it do?
+### What does it do?
 
 * Fully shared GET routes between server and client
-* Fully shared data collections between server and client, uses Exoskeleton's collection & model
-* Has Axios adapter for Exoskeleton, so you can use same REST API methods on both server and client
-* Stores collection/model state on server to JSON and browser client automatically bootstraps from that, no extra requests needed
-* Can be used with any framework that provides rendering for both client & server
+* Fully shared data stores between server and client, uses [Exoskeleton's](http://exosjs.com/) Collection & Model with [Axios](https://github.com/mzabriskie/axios) adapter, so you can use the same REST APIs everywhere
+* Stores the server state to JSON, browser client will automatically bootstrap from that, so you don't need to do any extra requests
+* Uses [express.js](http://expressjs.com/) router on server and [page.js](https://github.com/visionmedia/page.js) on browser, both use same route format, so you can use optional parameters and regexps in your routes
+* Automatic SEO, no hacks needed for server side rendering and you can easily make apps that work even when JavaScript is disabled in browser
+* Fast initial load for mobile clients, browser can bootstrap from server state and continue as Single-page app without any extra steps
+* Can be used with any framework that provides rendering for both server and client, [React.js](http://facebook.github.io/react/) recommended.
+
+## Data flow
+
+cerebellum's data flow is in many ways similar to [Flux architecture](https://facebook.github.io/flux/), but it has some key differences.
+
+![cerebellum data flow](http://i.imgur.com/0x9QlrG.png "cerebellum data flow")
+
+### Server and Client
+
+1) User requests a page, first server/client will ask from router to check for matching route.
+
+2) When router finds a matching route handler, it will query Store's stores (models & collections) for data.
+
+3) Store will either call APIs (always on server) or use cached data (never on server). Store returns data to route handler and route handler returns view component with data to client.
+
+4) Server/client renders the returned view component.
+
+### Client only (green arrows)
+
+Only router can ever update views in cerebellum, every data refresh requires invoking route handler.
+
+Views can trigger change events to stores (create, update, delete) which will be handled by Store. Store calls corresponding store API and invokes success callback (createSuccess, updateSuccess or deleteSuccess).
+
+Client can listen for success callbacks. In callbacks you can clear caches and refresh route (or invoke another route). There's also an option to automatically clear caches for stores.
 
 ## Store
 
-* Store is still under evaluation for best practices
+Store is a singleton that handles all data operations in cerebellum.
+You register your collections and models to Store by passing them to server and client constructors in **options.stores** (see "Stores (stores.js)" section below for more details).
 
-* Pass your collections and models in options as object (option.stores, see [sample app](https://bitbucket.org/SC5/cerebellum-app) for example). Store needs to have knowledge of all available collections&models for **import()** method.
+Store will automatically cache its state on server and bootstrap client from that state. Client will also cache all additional API requests, but you can easily clear caches when needed.
 
-* You can retrieve data from store using **this.store.fetch(storeId, options)**, it fetches the data from server or uses cached data.
+### Models, Collections === read only
 
-* If your store needs to fetch dynamic data, pass options to **this.store.fetch** as second parameter. For example, if you need to fetch data by id, your options would be `{id: id}`. Then in your model or collection you'd have `cacheKey` method returning `this.storeOptions.id` as part of cache key.
+Your should treat your models and collections as ready only, all mutations are handled by Store with **create**, **update** and **delete** events.
 
-* Store caches are populated with **fetch()** or when calling **import()**
+### Fetching data
 
-## Routes
+You can retrieve data from a store using **fetch(storeId, options)**.
 
-* Pass your GET routes in options as object (options.routes, see [sample app](https://bitbucket.org/SC5/cerebellum-app) for example). They get picked by **client.js** and **server.js** and generate exactly same response in both environments.
+If your store needs to fetch dynamic data, pass options to **fetch** as second parameter. For example, if you need to fetch model by id, your options would be `{id: id}`.
 
-* Currently you need to wrap your route handlers to promises, router expects all handlers to return promises.
+	this.store.fetch("post", {id: id});
 
-* In route handler's **this** scope you have **this.store** which is the reference to Store instance. It contains all your stores.
+### Caches and cacheKeys
 
-* On the server Store is initialized for every request and on  the client it's created once in the application's initialization phase.
+Store caches are populated when calling **fetch()**.
 
-* Server exports store contents to JSON at the end of request and client bootstraps itself from that data.
+Your models and collections should have `cacheKey` method, it defines where data will be cached in Store's cache.
+
+If you want to use **fetch** options as part of `cacheKey`, you can access them using `this.storeOptions`.
+
+	var Model = require('cerebellum').Model;
+
+  	var Post = Model.extend({
+      cacheKey: function() {
+        return "posts/" + this.storeOptions.id;
+      },
+      url: function() {
+        return "/posts/" + this.storeOptions.id + ".json";
+      }
+    });
+
+### Triggering changes
+
+Pass router's store instance to your view components and
+call `store.trigger` with **create**, **update** or **delete**.
+
+For example, you would create a new post to "posts" collection by calling:
+
+    store.trigger("create", "posts", {title: "New post", body: "Body text"});
+
+Store will execute the API call and fire a success callback when it finishes.
+
+### Expiring caches and reloading routes
+
+You can listen for store success callbacks in your client.js, like:
+
+    store.on("createSuccess:posts", function(data) {
+      console.log(data.store) // => posts
+      console.log(data.result); // => {id: 3423, title: "New post", body: "Body text"}
+
+      store.clearCache("posts", data.cacheKey); // clear client cache for posts, so new data will be fetched when route is reloaded
+      router("/posts"); // navigate to posts index, will re-fetch posts from API as cache was cleared
+    });
+
+    store.on("updateSuccess:post", function(data) {
+      store.clearCache("post", data.cacheKey); // clear individual model
+      store.clearCache("posts", "/posts") // clear posts collection as well
+      router("/posts/" + data.options.id ); // reload route data
+    });
+
+## Usage
+
+You can define all options in both server.js & client.js, but usually it makes sense to create a shared `options.js` for shared options.
+
+### Options (options.js)
+
+example `options.js`, these options are shared with client & server constructors.
+
+	var stores = require('./stores');
+  	var routes = require('./routes');
+
+  	module.exports = {
+      routes: routes,
+      storeId: "store_state_from_server",
+      stores: stores
+    };
+
+#### routes
+
+Object of route paths and route handlers. Best practice is to put these to their own file instead of bloating options.js, see "Routes (routes.js)" documentation below.
+
+#### storeId
+
+DOM ID in index.html where server generates the JSON that client will use for bootstrapping Store.
+
+#### stores
+
+Object containining store ids and stores. Best practice is to put these to their own file as well, see "Stores (stores.js)" documentation below.
+
+### Routes (routes.js)
+
+Example `routes.js`
+
+    require 'native-promise-only';
+    var Index = require('./components/index');
+    var Post = require('./components/post');
+
+    module.exports = {
+      '/': function() {
+        return this.store.fetch("posts").then(function(posts) {
+          return {
+            title: "Front page",
+            component: React.createElement(Index, {
+              posts: posts.toJSON()
+            })
+          };
+        });
+      },
+      '/posts/:id': function(id) {
+        return this.store.fetch("post", {id: id}).then(function(post) {
+          return {
+            title: post.get("title"),
+            component: React.createElement(Post, {
+              post: post.toJSON()
+            })
+          };
+        });
+      }
+    };
+
+Your routes will get picked by **client.js** and **server.js** and generate exactly same response in both environments.
+
+You need to wrap your route handlers to promises as router expects all handlers to return promises.
+
+In route handler's **this** scope you have **this.store** which is the reference to Store instance. It contains all your stores.
+
+On the server Store is initialized for every request and on the client it's created only once, in the application's initialtialization phase.
+
+Server exports store contents to JSON at the end of request and client bootstraps itself from that data.
+
+### Stores (stores.js)
+
+example `stores.js`
+
+    var PostsCollection = require('./stores/posts')
+    var AuthorModel = require('stores/author')
+
+    module.exports = {
+      posts: PostsCollection,
+      author: AuthorModel
+    };
+
+Return an object of store ids and stores. These will be registered to be used with Store.
+
+### Server (server.js)
+
+Server is responsible for rendering the first page for the user. Under the hood server creates express.js app.
+
+Server is initialized by calling **cerebellum.server(options)**
+
+See "Options (options.js)" section for shared options **(routes, storeId, stores)**, options below are server only.
+
+#### options.render(document, options={})
+
+Route promise will call server's render with document and its options when it gets resolved. document is a cheerio instance containing the staticFiles/index.html content.
+
+Example render function:
+
+    options.render = function(document, options) {
+      document("title").html(options.title);
+      document("#app").html(React.renderToString(options.component));
+      return document.html();
+    }
+
+#### options.staticFiles
+
+Path to static files, index.html will be served from there.
+
+    options.staticFiles = __dirname + "/public"
+
+#### options.middleware
+
+Array of middleware, each of them will be passed to express.use
+
+    var compress = require('compression');
+    options.middleware = [compress()];
+
+#### useStatic
+
+Instance method for cerebellum.server instance. Register express.js static file handling, you usually want to call this after executing cerebellum.server constructor, so cerebellum routes take precedence over static files.
+
+    var app = cerebellum.server(options);
+    app.useStatic();
+
+### Client (client.js)
+
+Client is responsible for managing the application after getting the initial state from server.
+
+Client is initialized by calling **cerebellum.client(options)**
+
+See "Options (options.js)" section for shared options **(routes, storeId, stores)**, options below are client only.
+
+#### options.render(options={})
+
+Route promise will call client's render with its options when it gets resolved.
+
+    options.render = function(options) {
+      document.getElementsByTagName("title")[0].innerHTML = options.title;
+      return React.render(options.component, document.getElementById("app"));
+    };
+
+#### options.initialize(client)
+
+This callback will be executed after client bootstrap is done.
+Returns client object with **router** and **store** instances.
+
+You can listen for store callback events, expire caches and reload routes here.
+
+    options.initialize = function(client) {
+      React.initializeTouchEvents(true);
+    };
+
+### Usage with React
+
+cerebellum works best with [React](http://facebook.github.io/react/).
+
+React makes server side rendering easy with **React.renderToString** and it can easily initialize client from server state. All code examples in this documentation use React for view generation.
 
 ## Running tests
 
@@ -59,8 +283,22 @@ Running all tests (server & client)
 
     npm run test
 
-## TODO
+## Browser support
 
-* Example app with authentication & real API usage
-* Better documentation & introduction blog post
-* Write more tests, especially for Store
+Internet Explorer 9 and newer, uses ES5 and needs pushState.
+
+## Apps using cerebellum
+
+[LiigaOpas](http://liiga.pw)
+Stats site for Finnish hockey league (Liiga)
+
+## Future improvements
+
+- Replace exoskeleton models & collections with something that does not provide anything extra, we don't really need setters & event system, they are handled by Store.
+- More examples, example app with authentication & real API usage
+- Find out if APIs could be queried on server side with same interface but less overhead (HTTP request overhead could be eliminated if API server is on the same machine)
+
+## License
+MIT, see LICENSE.
+
+Copyright (c) 2014 Lari Hoppula, [SC5 Online](http://sc5.io)
