@@ -1,5 +1,3 @@
-var server = require("./lib/server");
-var client = require("./lib/client");
 var exoskeleton = require("./lib/wrapper/exoskeleton");
 
 function validateOptions(options) {
@@ -23,11 +21,11 @@ function validateOptions(options) {
 var cerebellum = {
   server: function(options) {
     validateOptions(options);
-    return server(options);
+    return require("./lib/server")(options);
   },
   client: function(options) {
     validateOptions(options);
-    return client(options);
+    return require("./lib/client")(options);
   },
   Collection: exoskeleton.Collection,
   Model: exoskeleton.Model
