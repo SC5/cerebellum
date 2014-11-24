@@ -10,12 +10,13 @@
     "start": "http-server test/client -p 8000"
   },
   "author": "Lari Hoppula",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "browserify": "^6.0.2",
     "http-server": "^0.7.1",
     "mocha": "^1.21.4",
     "mocha-phantomjs": "^3.5.0",
+    "nock": "^0.50.0",
     "phantomjs": "^1.9.10",
     "should": "^4.0.4",
     "supertest": "^0.14.0"

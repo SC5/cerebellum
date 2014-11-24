@@ -86,6 +86,13 @@ call `store.trigger` with **create**, **update** or **delete**.
 For example, you would create a new post to "posts" collection by calling:
 
     store.trigger("create", "posts", {title: "New post", body: "Body text"});
+    
+You can update a model with:
+    
+    store.trigger("update", "post", {id: id}, {
+      title: "New post",
+      body: "New body text"  
+    });
 
 Store will execute the API call and fire a success callback when it finishes.
 
@@ -93,7 +100,7 @@ Store will execute the API call and fire a success callback when it finishes.
 
 You can listen for store success callbacks in your client.js, like:
 
-    store.on("createSuccess:posts", function(data) {
+    store.on("create:posts", function(err, data) {
       console.log(data.store) // => posts
       console.log(data.result); // => {id: 3423, title: "New post", body: "Body text"}
 
@@ -101,9 +108,9 @@ You can listen for store success callbacks in your client.js, like:
       router("/posts"); // navigate to posts index, will re-fetch posts from API as cache was cleared
     });
 
-    store.on("updateSuccess:post", function(data) {
+    store.on("update:post", function(err, data) {
       store.clearCache("post", data.cacheKey); // clear individual model
-      store.clearCache("posts", "/posts") // clear posts collection as well
+      store.clearCache("posts", "posts") // clear posts collection as well
       router("/posts/" + data.options.id ); // reload route data
     });
 

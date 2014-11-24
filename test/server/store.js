@@ -1,4 +1,5 @@
 var should = require('should');
+var nock = require('nock');
 require('native-promise-only');
 
 var Store = require('../../lib/store');
@@ -6,29 +7,59 @@ var exoskeleton = require("../../lib/wrapper/exoskeleton");
 var Collection = exoskeleton.Collection;
 var Model = exoskeleton.Model;
 
+// GET
+nock('http://cerebellum.local')
+.get('/collection/1')
+.times(2)
+.reply(401);
+
+nock('http://cerebellum.local')
+.get('/cars/Ferrari')
+.times(7)
+.reply(200, {
+  manufacturer: "Ferrari"
+});
+
+nock('http://cerebellum.local')
+.post('/cars/Ferrari')
+.times(2)
+.reply(200, {
+  manufacturer: "Ferrari",
+  model: "F40"
+});
+
+nock('http://cerebellum.local')
+.get('/cars/Lotus')
+.reply(200, {
+  manufacturer: "Lotus"
+});
+
+nock('http://cerebellum.local')
+.post('/cars')
+.reply(500, "Internal server error");
+
 var stores = {
   model: Model.extend({
 
   }),
   collection: Collection.extend({
     cacheKey: function() {
-      return "collection";
+      return "collection/1";
     },
-    fetch: function() {
-      return new Promise(function(resolve, reject) {
-        reject(new Error("Not authorized"));
-      });
-    }
+    url: "http://cerebellum.local/collection/1"
   }),
   car: Model.extend({
     cacheKey: function() {
       return this.storeOptions.id;
     },
-    fetch: function() {
-      this.set("manufacturer", this.storeOptions.id);
-      return new Promise(function(resolve, reject) {
-        resolve();
-      });
+    url: function() {
+      return "http://cerebellum.local/cars/" + this.storeOptions.id;
+    }
+  }),
+  cars: Collection.extend({
+    cacheKey: "cars",
+    url: function() {
+      return "http://cerebellum.local/cars";
     }
   })
 };
@@ -76,7 +107,7 @@ describe('Store', function() {
     it('should return cached value if found', function() {
       var store = new Store(stores);
 
-      var lambo = store.get("car").clone();
+      var lambo = store.get("car");
       lambo.set("manufacturer", "Lamborghini (not set by fetch)");
       lambo.set("model", "Aventador");
       store.cached["car"]["Lamborghini"] = lambo;
@@ -90,7 +121,7 @@ describe('Store', function() {
 
     it('should return store object even if error occurs', function() {
       var store = new Store(stores);
-      var original = store.get("collection").clone();
+      var original = store.get("collection");
       original.storeOptions = {};
       return store.fetch("collection").then(function(result) {
         original.should.eql(result);
@@ -180,13 +211,15 @@ describe('Store', function() {
         car: {
           "Ferrari": {manufacturer: "Ferrari"},
           "Lotus": {manufacturer: "Lotus"}
-        }
+        },
+        cars: {}
       });
 
       store.export().should.be.eql(JSON.stringify({
         model: {},
         collection: {},
-        car: {}
+        car: {},
+        cars: {}
       }));
 
       return Promise.all([
@@ -197,6 +230,104 @@ describe('Store', function() {
         store.export().should.be.eql(expectedJSON);
       });
     });
+  });
+
+  describe('clearCache', function() {
+    it('should clear cache automatically when passing autoClearCaches = true', function() {
+      var store = new Store(stores, {autoClearCaches: true});
+
+      return store.fetch("car", {id: "Ferrari"}).then(function() {
+        store.on("update:car", function(err, options) {
+          should.not.exist(store.cached.car.Ferrari);
+        });
+        should.exist(store.cached.car.Ferrari);
+        store.trigger("update", "car", {id: "Ferrari"}, {
+          manufacturer: "Ferrari",
+          model: "F40"
+        });
+      });
+    });
+
+    it('should clear cache when calling with storeId and cacheKey', function() {
+      var store = new Store(stores);
+
+      return store.fetch("car", {id: "Ferrari"}).then(function() {
+        store.on("update:car", function(err, options) {
+          should.exist(store.cached.car.Ferrari);
+          store.clearCache("car", options.cacheKey);
+          should.not.exist(store.cached.car.Ferrari);
+        });
+        should.exist(store.cached.car.Ferrari);
+        store.trigger("update", "car", {id: "Ferrari"}, {
+          manufacturer: "Ferrari",
+          model: "F40"
+        });
+      });
+    });
+  });
+
+  describe('create', function() {
+    it('should trigger error when triggering create for model', function(done) {
+      var store = new Store(stores);
+      store.on("create:car", function(err, data) {
+        err.message.should.equal("You can call create only for collections!");
+        done();
+      });
+      store.trigger("create", "car", {manufacturer: "Mercedes-Benz"});
+    });
+
+    it('should trigger error when create fails', function(done) {
+      var store = new Store(stores);
+      store.on("create:cars", function(err, data) {
+        // mocha issue, does not work without setTimeout block
+        setTimeout(function() {
+          err.message.should.equal("Internal server error");
+          done();
+        }, 0);
+      });
+      store.trigger("create", "cars", {manufacturer: "Mercedes-Benz"});
+    });
+
+    it('should trigger success with proper object when create succeeds', function() {
+
+    });
+  });
+
+  describe('update', function() {
+    it('should trigger error when triggering update for collection', function() {
+      var store = new Store(stores);
+      store.on("update:collection", function(err, data) {
+        err.message.should.equal("You can call update only for models!");
+      });
+      store.trigger("update", "collection", {title: "Updated collection"});
+    });
+
+    it('should trigger error when update fails', function() {
+
+    });
+
+    it('should trigger success with proper object when update succeeds', function() {
+
+    });
+  });
+
+  describe('delete', function() {
+    it('should trigger error when triggering delete for collection', function() {
+      var store = new Store(stores);
+      store.on("delete:collection", function(err, data) {
+        err.message.should.equal("You can call destroy only for models!");
+      });
+      store.trigger("delete", "collection");
+    });
+
+    it('should trigger error when delete fails', function() {
+
+    });
+
+    it('should trigger success with proper object when delete succeeds', function() {
+
+    });
+
   });
 
 });
