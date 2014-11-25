@@ -86,12 +86,12 @@ call `store.trigger` with **create**, **update** or **delete**.
 For example, you would create a new post to "posts" collection by calling:
 
     store.trigger("create", "posts", {title: "New post", body: "Body text"});
-    
+
 You can update a model with:
-    
+
     store.trigger("update", "post", {id: id}, {
       title: "New post",
-      body: "New body text"  
+      body: "New body text"
     });
 
 Store will execute the API call and fire a success callback when it finishes.
@@ -122,13 +122,14 @@ You can define all options in both server.js & client.js, but usually it makes s
 
 example `options.js`, these options are shared with client & server constructors.
 
-	var stores = require('./stores');
-  	var routes = require('./routes');
+    var stores = require('./stores');
+    var routes = require('./routes');
 
-  	module.exports = {
+    module.exports = {
       routes: routes,
       storeId: "store_state_from_server",
-      stores: stores
+      stores: stores,
+      autoToJSON: true
     };
 
 #### routes
@@ -142,6 +143,10 @@ DOM ID in index.html where server generates the JSON that client will use for bo
 #### stores
 
 Object containining store ids and stores. Best practice is to put these to their own file as well, see "Stores (stores.js)" documentation below.
+
+#### autoToJSON
+
+Call **toJSON()** automatically for **fetch** results. Defaults to true, set to false if you need to modify your stores in route handlers before passing them to views as JSON (not encouraged, you should override **toJSON** instead).
 
 ### Routes (routes.js)
 
@@ -265,6 +270,12 @@ You can listen for store callback events, expire caches and reload routes here.
     options.initialize = function(client) {
       React.initializeTouchEvents(true);
     };
+
+#### options.autoClearCaches
+
+With this option Store will automatically clear cache for matching cacheKey after **create**, **update** or **delete**. Defaults to false.
+
+    options.autoClearCaches = true;
 
 ### Usage with React
 

@@ -125,8 +125,7 @@ describe('Store', function() {
     it('should fetch from server if cache not found', function() {
       var store = new Store(stores);
       return store.fetch("car", {id: "Ferrari"}).then(function(result) {
-        result.storeOptions.should.have.property("id", "Ferrari");
-        result.get("manufacturer").should.be.equal("Ferrari");
+        result.manufacturer.should.be.equal("Ferrari");
       });
     });
 
@@ -139,8 +138,8 @@ describe('Store', function() {
       store.cached["car"]["Lamborghini"] = lambo;
 
       return store.fetch("car", {id: "Lamborghini"}).then(function(result) {
-        result.get("manufacturer").should.be.equal("Lamborghini (not set by fetch)");
-        result.get("model").should.be.equal("Aventador");
+        result.manufacturer.should.be.equal("Lamborghini (not set by fetch)");
+        result.model.should.be.equal("Aventador");
       });
 
     });
@@ -150,12 +149,12 @@ describe('Store', function() {
       var original = store.get("collection");
       original.storeOptions = {};
       return store.fetch("collection").then(function(result) {
-        original.should.eql(result);
+        result.should.eql(original);
       });
     });
 
     it('should cache store value after server fetch', function() {
-      var store = new Store(stores);
+      var store = new Store(stores, {autoToJSON: false});
       return store.fetch("car", {id: "Ferrari"}).then(function(result) {
         store.cached["car"]["Ferrari"].should.equal(result);
       });
@@ -177,17 +176,16 @@ describe('Store', function() {
 
     it('should not modify original placeholder instance', function() {
       var store = new Store(stores);
-      var original = store.get("collection");
+      var original = store.get("car");
       return store.fetch("car", {id: "Ferrari"}).then(function(result) {
-        result.storeOptions.should.have.property("id", "Ferrari");
-        result.get("manufacturer").should.be.equal("Ferrari");
+        result.manufacturer.should.be.equal("Ferrari");
         original.should.not.have.property("storeOptions");
-        (original.get("manufacturer") === undefined).should.be.true;
+        (original.manufacturer === undefined).should.be.true;
       });
     });
 
     it('should set storeOptions', function() {
-      var store = new Store(stores);
+      var store = new Store(stores, {autoToJSON: false});
       return store.fetch("car", {id: "Ferrari"}).then(function(result) {
         result.storeOptions.should.have.property("id", "Ferrari");
       });
