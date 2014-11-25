@@ -7,7 +7,7 @@ var exoskeleton = require("../../lib/wrapper/exoskeleton");
 var Collection = exoskeleton.Collection;
 var Model = exoskeleton.Model;
 
-// GET
+// Mocks
 nock('http://cerebellum.local')
 .get('/collection/1')
 .times(2)
@@ -29,6 +29,25 @@ nock('http://cerebellum.local')
 });
 
 nock('http://cerebellum.local')
+.post('/cars/Lotus')
+.reply(500, "Internal server error");
+
+nock('http://cerebellum.local')
+.delete('/cars/Lotus')
+.reply(401, "Unauthorized");
+
+nock('http://cerebellum.local')
+.delete('/cars/Maserati')
+.reply(200);
+
+nock('http://cerebellum.local')
+.post('/cars/Pagani')
+.reply(200, {
+  manufacturer: "Pagani",
+  model: "Zonda"
+});
+
+nock('http://cerebellum.local')
 .get('/cars/Lotus')
 .reply(200, {
   manufacturer: "Lotus"
@@ -38,6 +57,13 @@ nock('http://cerebellum.local')
 .post('/cars')
 .reply(500, "Internal server error");
 
+nock('http://cerebellum.local')
+.post('/cars')
+.reply(200, {
+  manufacturer: "Bugatti"
+});
+
+// Stores
 var stores = {
   model: Model.extend({
 
@@ -279,17 +305,23 @@ describe('Store', function() {
     it('should trigger error when create fails', function(done) {
       var store = new Store(stores);
       store.on("create:cars", function(err, data) {
-        // mocha issue, does not work without setTimeout block
-        setTimeout(function() {
-          err.message.should.equal("Internal server error");
-          done();
-        }, 0);
+        err.message.should.equal("Internal server error");
+        done();
       });
       store.trigger("create", "cars", {manufacturer: "Mercedes-Benz"});
     });
 
-    it('should trigger success with proper object when create succeeds', function() {
-
+    it('should trigger success with proper object when create succeeds', function(done) {
+      var store = new Store(stores);
+      store.on("create:cars", function(err, data) {
+        should.not.exist(err);
+        data.cacheKey.should.equal("cars");
+        data.store.should.equal("cars");
+        data.options.should.eql({});
+        data.result.get("manufacturer").should.equal("Bugatti");
+        done();
+      });
+      store.trigger("create", "cars", {manufacturer: "Bugatti"});
     });
   });
 
@@ -302,12 +334,27 @@ describe('Store', function() {
       store.trigger("update", "collection", {title: "Updated collection"});
     });
 
-    it('should trigger error when update fails', function() {
-
+    it('should trigger error when update fails', function(done) {
+      var store = new Store(stores);
+      store.on("update:car", function(err, data) {
+        err.message.should.equal("Internal server error");
+        done();
+      });
+      store.trigger("update", "car", {id: "Lotus"}, {manufacturer: "Lotus", model: "Exige"});
     });
 
     it('should trigger success with proper object when update succeeds', function() {
-
+      var store = new Store(stores);
+      store.on("update:car", function(err, data) {
+        should.not.exist(err);
+        data.cacheKey.should.equal("Pagani");
+        data.store.should.equal("car");
+        data.options.should.eql({id: "Pagani"});
+        data.result.get("manufacturer").should.equal("Pagani");
+        data.result.get("model").should.equal("Zonda");
+        done();
+      });
+      store.trigger("update", "car", {id: "Pagani"}, {manufacturer: "Pagani", model: "Zonda"});
     });
   });
 
@@ -320,12 +367,25 @@ describe('Store', function() {
       store.trigger("delete", "collection");
     });
 
-    it('should trigger error when delete fails', function() {
-
+    it('should trigger error when delete fails', function(done) {
+      var store = new Store(stores);
+      store.on("delete:car", function(err, data) {
+        err.message.should.equal("Unauthorized");
+        done();
+      });
+      store.trigger("delete", "car", {id: "Lotus"});
     });
 
-    it('should trigger success with proper object when delete succeeds', function() {
-
+    it('should trigger success with proper object when delete succeeds', function(done) {
+      var store = new Store(stores);
+      store.on("delete:car", function(err, data) {
+        should.not.exist(err);
+        data.cacheKey.should.equal("Maserati");
+        data.store.should.equal("car");
+        data.options.should.eql({id: "Maserati"});
+        done();
+      });
+      store.trigger("delete", "car", {id: "Maserati"});
     });
 
   });
