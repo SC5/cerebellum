@@ -10,7 +10,14 @@ var Model = exoskeleton.Model;
 // Mocks
 nock('http://cerebellum.local')
 .get('/collection/1')
-.times(2)
+.reply(401);
+
+nock('http://cerebellum.local')
+.get('/collection/1')
+.reply(500, "Internal server error");
+
+nock('http://cerebellum.local')
+.get('/collection/1')
 .reply(401);
 
 nock('http://cerebellum.local')
@@ -144,12 +151,22 @@ describe('Store', function() {
 
     });
 
-    it('should return store object even if error occurs', function() {
+    it('should return store object even if error occurs (statuses 401 & 403)', function() {
       var store = new Store(stores);
       var original = store.get("collection");
       original.storeOptions = {};
       return store.fetch("collection").then(function(result) {
         result.should.eql(original);
+      });
+    });
+
+    it('should reject promise with error if error occurs (other statuses)', function() {
+      var store = new Store(stores);
+      var original = store.get("collection");
+      original.storeOptions = {};
+      return store.fetch("collection").catch(function(err) {
+        err.status.should.equal(500);
+        err.data.should.equal("Internal server error");
       });
     });
 
