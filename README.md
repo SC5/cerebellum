@@ -1,10 +1,10 @@
-## cerebellum
+## Cerebellum.js
 
-cerebellum is a powerful set of tools that help you structure your isomorphic apps, just add your preferred view engine.
+Cerebellum.js is a powerful set of tools that help you structure your isomorphic apps, just add your preferred view engine.
 
-With cerebellum you can fully share the code for your GET routes, same code works on server and client, perfect for single-page apps.
+With Cerebellum you can fully share the code for your GET routes, same code works on server and client, perfect for single-page apps.
 
-cerebellum is still under heavy development, expect breaking changes between 0.x releases.
+Cerebellum is still under heavy development, expect breaking changes between 0.x releases.
 
 ### What does it do?
 
@@ -18,9 +18,9 @@ cerebellum is still under heavy development, expect breaking changes between 0.x
 
 ## Data flow
 
-cerebellum's data flow is in many ways similar to [Flux architecture](https://facebook.github.io/flux/), but it has some key differences.
+Cerebellum's data flow is in many ways similar to [Flux architecture](https://facebook.github.io/flux/), but it has some key differences.
 
-![cerebellum data flow](http://i.imgur.com/0x9QlrG.png "cerebellum data flow")
+![cerebellum data flow](http://i.imgur.com/0x9QlrG.png "Cerebellum data flow")
 
 ### Server and Client
 
@@ -34,7 +34,7 @@ cerebellum's data flow is in many ways similar to [Flux architecture](https://fa
 
 ### Client only (green arrows)
 
-Only router can ever update views in cerebellum, every data refresh requires invoking route handler.
+Only router can ever update views in Cerebellum, every data refresh requires invoking route handler.
 
 Views can trigger change events to stores (create, update, delete) which will be handled by Store. Store calls corresponding store API and invokes success callback (createSuccess, updateSuccess or deleteSuccess).
 
@@ -42,7 +42,7 @@ Client can listen for success callbacks. In callbacks you can clear caches and r
 
 ## Store
 
-Store is a singleton that handles all data operations in cerebellum.
+Store is a singleton that handles all data operations in Cerebellum.
 You register your collections and models to Store by passing them to server and client constructors in **options.stores** (see "Stores (stores.js)" section below for more details).
 
 Store will automatically cache its state on server and bootstrap client from that state. Client will also cache all additional API requests, but you can easily clear caches when needed.
@@ -238,7 +238,7 @@ Array of middleware, each of them will be passed to express.use
 
 #### useStatic
 
-Instance method for cerebellum.server instance. Register express.js static file handling, you usually want to call this after executing cerebellum.server constructor, so cerebellum routes take precedence over static files.
+Instance method for cerebellum.server instance. Register express.js static file handling, you usually want to call this after executing cerebellum.server constructor, so Cerebellum routes take precedence over static files.
 
     var app = cerebellum.server(options);
     app.useStatic();
@@ -279,7 +279,7 @@ With this option Store will automatically clear cache for matching cacheKey afte
 
 ### Usage with React
 
-cerebellum works best with [React](http://facebook.github.io/react/).
+Cerebellum works best with [React](http://facebook.github.io/react/).
 
 React makes server side rendering easy with **React.renderToString** and it can easily initialize client from server state. All code examples in this documentation use React for view generation.
 
@@ -305,7 +305,7 @@ Running all tests (server & client)
 
 Internet Explorer 9 and newer, uses ES5 and needs pushState.
 
-## Apps using cerebellum
+## Apps using Cerebellum
 
 [LiigaOpas](http://liiga.pw)
 Stats site for Finnish hockey league (Liiga)
