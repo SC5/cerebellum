@@ -310,6 +310,9 @@ Internet Explorer 9 and newer, uses ES5 and needs pushState.
 [LiigaOpas](http://liiga.pw)
 Stats site for Finnish hockey league (Liiga)
 
+[urls](https://bitbucket.org/SC5/cerebellum-urls)
+Sample app for saving & tagging urls, demonstrates CRUD & authorization
+
 ## Future improvements
 
 - Replace exoskeleton models & collections with something that does not provide anything extra, we don't really need setters & event system, they are handled by Store.
