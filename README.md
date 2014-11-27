@@ -20,7 +20,7 @@ Cerebellum is still under heavy development, expect breaking changes between 0.x
 
 Cerebellum's data flow is in many ways similar to [Flux architecture](https://facebook.github.io/flux/), but it has some key differences.
 
-![cerebellum data flow](http://i.imgur.com/0x9QlrG.png "Cerebellum data flow")
+![cerebellum data flow](http://i.imgur.com/S6M9wiS.png "Cerebellum data flow")
 
 ### Server and Client
 
@@ -57,7 +57,9 @@ You can retrieve data from a store using **fetch(storeId, options)**.
 
 If your store needs to fetch dynamic data, pass options to **fetch** as second parameter. For example, if you need to fetch model by id, your options would be `{id: id}`.
 
-	this.store.fetch("post", {id: id});
+```javascript
+this.store.fetch("post", {id: id});
+```
 
 ### Caches and cacheKeys
 
@@ -67,16 +69,18 @@ Your models and collections should have `cacheKey` method, it defines where data
 
 If you want to use **fetch** options as part of `cacheKey`, you can access them using `this.storeOptions`.
 
-	var Model = require('cerebellum').Model;
+```javascript
+var Model = require('cerebellum').Model;
 
-  	var Post = Model.extend({
-      cacheKey: function() {
-        return "posts/" + this.storeOptions.id;
-      },
-      url: function() {
-        return "/posts/" + this.storeOptions.id + ".json";
-      }
-    });
+var Post = Model.extend({
+  cacheKey: function() {
+    return "posts/" + this.storeOptions.id;
+  },
+  url: function() {
+    return "/posts/" + this.storeOptions.id + ".json";
+   }
+});
+```
 
 ### Triggering changes
 
@@ -85,34 +89,39 @@ call `store.trigger` with **create**, **update** or **delete**.
 
 For example, you would create a new post to "posts" collection by calling:
 
-    store.trigger("create", "posts", {title: "New post", body: "Body text"});
+```javascript
+store.trigger("create", "posts", {title: "New post", body: "Body text"});
+```
 
 You can update a model with:
 
-    store.trigger("update", "post", {id: id}, {
-      title: "New post",
-      body: "New body text"
-    });
-
+```javascript
+store.trigger("update", "post", {id: id}, {
+  title: "New post",
+  body: "New body text"
+});
+```
 Store will execute the API call and fire a success callback when it finishes.
 
 ### Expiring caches and reloading routes
 
 You can listen for store success callbacks in your client.js, like:
 
-    store.on("create:posts", function(err, data) {
-      console.log(data.store) // => posts
-      console.log(data.result); // => {id: 3423, title: "New post", body: "Body text"}
+```javascript
+store.on("create:posts", function(err, data) {
+  console.log(data.store) // => posts
+  console.log(data.result); // => {id: 3423, title: "New post", body: "Body text"}
 
-      store.clearCache("posts", data.cacheKey); // clear client cache for posts, so new data will be fetched when route is reloaded
-      router("/posts"); // navigate to posts index, will re-fetch posts from API as cache was cleared
-    });
+store.clearCache("posts", data.cacheKey); // clear client cache for posts, so new data will be fetched when route is reloaded
+  router("/posts"); // navigate to posts index, will re-fetch posts from API as cache was cleared
+});
 
-    store.on("update:post", function(err, data) {
-      store.clearCache("post", data.cacheKey); // clear individual model
-      store.clearCache("posts", "posts") // clear posts collection as well
-      router("/posts/" + data.options.id ); // reload route data
-    });
+store.on("update:post", function(err, data) {
+  store.clearCache("post", data.cacheKey); // clear individual model
+  store.clearCache("posts", "posts") // clear posts collection as well
+  router("/posts/" + data.options.id ); // reload route data
+});
+```
 
 ## Usage
 
@@ -122,15 +131,17 @@ You can define all options in both server.js & client.js, but usually it makes s
 
 example `options.js`, these options are shared with client & server constructors.
 
-    var stores = require('./stores');
-    var routes = require('./routes');
+```javascript
+var stores = require('./stores');
+var routes = require('./routes');
 
-    module.exports = {
-      routes: routes,
-      storeId: "store_state_from_server",
-      stores: stores,
-      autoToJSON: true
-    };
+module.exports = {
+  routes: routes,
+  storeId: "store_state_from_server",
+  stores: stores,
+  autoToJSON: true
+};
+```
 
 #### routes
 
@@ -152,32 +163,33 @@ Call **toJSON()** automatically for **fetch** results. Defaults to true, set to 
 
 Example `routes.js`
 
-    require 'native-promise-only';
-    var Index = require('./components/index');
-    var Post = require('./components/post');
+```javascript
+var Index = require('./components/index');
+var Post = require('./components/post');
 
-    module.exports = {
-      '/': function() {
-        return this.store.fetch("posts").then(function(posts) {
-          return {
-            title: "Front page",
-            component: React.createElement(Index, {
-              posts: posts.toJSON()
-            })
-          };
-        });
-      },
-      '/posts/:id': function(id) {
-        return this.store.fetch("post", {id: id}).then(function(post) {
-          return {
-            title: post.get("title"),
-            component: React.createElement(Post, {
-              post: post.toJSON()
-            })
-          };
-        });
-      }
-    };
+module.exports = {
+  '/': function() {
+    return this.store.fetch("posts").then(function(posts) {
+      return {
+        title: "Front page",
+        component: React.createElement(Index, {
+          posts: posts.toJSON()
+        })
+      };
+    });
+  },
+  '/posts/:id': function(id) {
+    return this.store.fetch("post", {id: id}).then(function(post) {
+      return {
+        title: post.get("title"),
+        component: React.createElement(Post, {
+          post: post.toJSON()
+        })
+      };
+    });
+  }
+};
+```
 
 Your routes will get picked by **client.js** and **server.js** and generate exactly same response in both environments.
 
@@ -193,13 +205,15 @@ Server exports store contents to JSON at the end of request and client bootstrap
 
 example `stores.js`
 
-    var PostsCollection = require('./stores/posts')
-    var AuthorModel = require('stores/author')
+```javascript
+var PostsCollection = require('./stores/posts')
+var AuthorModel = require('stores/author')
 
-    module.exports = {
-      posts: PostsCollection,
-      author: AuthorModel
-    };
+module.exports = {
+  posts: PostsCollection,
+  author: AuthorModel
+};
+```
 
 Return an object of store ids and stores. These will be registered to be used with Store.
 
@@ -217,31 +231,39 @@ Route promise will call server's render with document and its options when it ge
 
 Example render function:
 
-    options.render = function(document, options) {
-      document("title").html(options.title);
-      document("#app").html(React.renderToString(options.component));
-      return document.html();
-    }
+```javascript
+options.render = function(document, options) {
+  document("title").html(options.title);
+  document("#app").html(React.renderToString(options.component));
+  return document.html();
+}
+```
 
 #### options.staticFiles
 
 Path to static files, index.html will be served from there.
 
-    options.staticFiles = __dirname + "/public"
+```javascript
+options.staticFiles = __dirname + "/public"
+```
 
 #### options.middleware
 
 Array of middleware, each of them will be passed to express.use
 
-    var compress = require('compression');
-    options.middleware = [compress()];
+```javascript
+var compress = require('compression');
+options.middleware = [compress()];
+```
 
 #### useStatic
 
 Instance method for cerebellum.server instance. Register express.js static file handling, you usually want to call this after executing cerebellum.server constructor, so Cerebellum routes take precedence over static files.
 
-    var app = cerebellum.server(options);
-    app.useStatic();
+```javascript
+var app = cerebellum.server(options);
+app.useStatic();
+```
 
 ### Client (client.js)
 
@@ -255,10 +277,12 @@ See "Options (options.js)" section for shared options **(routes, storeId, stores
 
 Route promise will call client's render with its options when it gets resolved.
 
-    options.render = function(options) {
-      document.getElementsByTagName("title")[0].innerHTML = options.title;
-      return React.render(options.component, document.getElementById("app"));
-    };
+```javascript
+options.render = function(options) {
+  document.getElementsByTagName("title")[0].innerHTML = options.title;
+  return React.render(options.component, document.getElementById("app"));
+};
+```
 
 #### options.initialize(client)
 
@@ -267,15 +291,19 @@ Returns client object with **router** and **store** instances.
 
 You can listen for store callback events, expire caches and reload routes here.
 
-    options.initialize = function(client) {
-      React.initializeTouchEvents(true);
-    };
+```javascript
+options.initialize = function(client) {
+  React.initializeTouchEvents(true);
+};
+```
 
 #### options.autoClearCaches
 
 With this option Store will automatically clear cache for matching cacheKey after **create**, **update** or **delete**. Defaults to false.
 
-    options.autoClearCaches = true;
+```javascript
+options.autoClearCaches = true;
+```
 
 ### Usage with React
 
