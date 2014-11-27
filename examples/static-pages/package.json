@@ -1,0 +1,33 @@
+{
+  "name": "static-pages",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "NODE_ENV=production browserify client.js -u jquery -u underscore -t reactify -t envify -o public/js/app.js",
+    "build_min": "uglifyjs public/js/app.js -o public/js/app.min.js",
+    "watch": "watchify client.js -u jquery -u underscore -v -d -t reactify -o public/js/app.js",
+    "start": "nodemon server.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "react": "^0.12.1",
+    "react-bootstrap": "^0.13.0",
+    "serve-favicon": "^2.1.7"
+  },
+  "devDependencies": {
+    "browserify": "^6.3.3",
+    "compression": "^1.2.1",
+    "envify": "^3.2.0",
+    "native-promise-only": "^0.7.6-a",
+    "node-jsx": "^0.12.4",
+    "nodemon": "^1.2.1",
+    "reactify": "^0.17.1",
+    "uglify-js": "^2.4.15",
+    "watchify": "^2.1.1"
+  },
+  "browser": {
+    "./config/api.js": "./config/api-browser.js"
+  }
+}
