@@ -335,11 +335,11 @@ Internet Explorer 9 and newer, uses ES5 and needs pushState.
 
 ## Apps using Cerebellum
 
-[LiigaOpas](http://liiga.pw)
-Stats site for Finnish hockey league (Liiga)
-
 [urls](https://bitbucket.org/SC5/cerebellum-urls)
 Sample app for saving & tagging urls, demonstrates CRUD & authorization
+
+[LiigaOpas](http://liiga.pw)
+Stats site for Finnish hockey league (Liiga), **not online yet**
 
 ## Future improvements
 
