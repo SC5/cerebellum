@@ -1,6 +1,6 @@
 {
   "name": "cerebellum",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Controls your isomorphic apps",
   "scripts": {
     "test_build": "browserify -u underscore -u jquery -s Cerebellum index.js -o test/client/cerebellum_test_build.js",
@@ -36,6 +36,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://bitbucket.org/SC5/cerebellum"
+    "url": "https://github.com/SC5/cerebellum.git"
   }
 }

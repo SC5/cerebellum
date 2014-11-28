@@ -335,7 +335,7 @@ Internet Explorer 9 and newer, uses ES5 and needs pushState.
 
 ## Apps using Cerebellum
 
-[urls](https://bitbucket.org/SC5/cerebellum-urls)
+[urls](https://github.com/SC5/cerebellum-urls)
 Sample app for saving & tagging urls, demonstrates CRUD & authorization
 
 [LiigaOpas](http://liiga.pw)
