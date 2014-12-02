@@ -22,7 +22,7 @@ nock('http://cerebellum.local')
 
 nock('http://cerebellum.local')
 .get('/cars/Ferrari')
-.times(7)
+.times(8)
 .reply(200, {
   manufacturer: "Ferrari"
 });
@@ -403,6 +403,24 @@ describe('Store', function() {
       store.trigger("delete", "car", {id: "Maserati"});
     });
 
+  });
+
+  describe('expire', function() {
+    it('should trigger success with proper object when expire succeeds', function(done) {
+      var store = new Store(stores);
+      store.on("expire:car", function(err, data) {
+        should.not.exist(err);
+        data.cacheKey.should.equal("Ferrari");
+        data.store.should.equal("car");
+        data.options.should.eql({id: "Ferrari"});
+        should.not.exist(store.cached.car.Ferrari);
+        done();
+      });
+      return store.fetch("car", {id: "Ferrari"}).then(function(result) {
+        store.cached.car.Ferrari.get("manufacturer").should.be.equal("Ferrari");
+        store.trigger("expire", "car", {id: "Ferrari"});
+      });
+    });
   });
 
 });
