@@ -13,7 +13,7 @@ Install dependencies:
 
 Build:
 
-    npm build
+    npm run build
 
 Start (& reload server with nodemon on changes):
 
@@ -21,4 +21,4 @@ Start (& reload server with nodemon on changes):
 
 Watch for changes (and rebuild public/js/app.js with source maps):
 
-    npm watch
+    npm run watch
