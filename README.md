@@ -339,7 +339,7 @@ Internet Explorer 9 and newer, uses ES5 and needs pushState.
 Sample app for saving & tagging urls, demonstrates CRUD & authorization
 
 [LiigaOpas](http://liiga.pw)
-Stats site for Finnish hockey league (Liiga), **not online yet**
+Stats site for Finnish hockey league (Liiga)
 
 ## Future improvements
 
