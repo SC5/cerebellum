@@ -1,8 +1,6 @@
 var React = require('react/addons');
-var ReactBootstrap = require('react-bootstrap');
-
-var Jumbotron = ReactBootstrap.Jumbotron;
-var Panel = ReactBootstrap.Panel;
+var Jumbotron = require('react-bootstrap/Jumbotron');
+var Panel = require('react-bootstrap/Panel');
 var Navigation = require('./navigation.jsx');
 
 var NotFound = React.createClass({

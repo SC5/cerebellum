@@ -1,9 +1,7 @@
 var React = require('react/addons');
-var ReactBootstrap = require('react-bootstrap');
-
-var Navbar = ReactBootstrap.Navbar;
-var NavItem = ReactBootstrap.NavItem;
-var Nav = ReactBootstrap.Nav;
+var Navbar = require('react-bootstrap/Navbar');
+var NavItem = require('react-bootstrap/NavItem');
+var Nav = require('react-bootstrap/Nav');
 
 var Navigation = React.createClass({
   render: function() {
