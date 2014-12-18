@@ -36,20 +36,21 @@ Cerebellum's data flow is in many ways similar to [Flux architecture](https://fa
 
 Only router can ever update views in Cerebellum, every data refresh requires invoking route handler.
 
-Views can trigger change events to stores (create, update, delete) which will be handled by Store. Store calls corresponding store API and invokes success callback (createSuccess, updateSuccess or deleteSuccess).
+Views can trigger change events to stores (create, update, delete, expire) which will be handled by Store. Store calls corresponding store API and triggers an event (create:storeName, update:storeName, delete:storeName or expire:storeName).
 
-Client can listen for success callbacks. In callbacks you can clear caches and refresh route (or invoke another route). There's also an option to automatically clear caches for stores.
+Client can listen for these events. In event callbacks you can clear caches and reload current route (or invoke another route). There's also an option to automatically clear caches for stores.
 
 ## Store
 
 Store is a singleton that handles all data operations in Cerebellum.
+
 You register your collections and models to Store by passing them to server and client constructors in **options.stores** (see "Stores (stores.js)" section below for more details).
 
 Store will automatically cache its state on server and bootstrap client from that state. Client will also cache all additional API requests, but you can easily clear caches when needed.
 
 ### Models, Collections === read only
 
-Your should treat your models and collections as ready only, all mutations are handled by Store with **create**, **update** and **delete** events.
+You should treat your models and collections as read only, all mutations are handled by Store with **create**, **update**, **delete** and **expire** events.
 
 ### Fetching data
 
@@ -85,7 +86,7 @@ var Post = Model.extend({
 ### Triggering changes
 
 Pass router's store instance to your view components and
-call `store.trigger` with **create**, **update** or **delete**.
+call `store.trigger` with **create**, **update**, **delete** or **expire**.
 
 For example, you would create a new post to "posts" collection by calling:
 
@@ -101,6 +102,7 @@ store.trigger("update", "post", {id: id}, {
   body: "New body text"
 });
 ```
+
 Store will execute the API call and fire a success callback when it finishes.
 
 ### Expiring caches and reloading routes
@@ -112,7 +114,7 @@ store.on("create:posts", function(err, data) {
   console.log(data.store) // => posts
   console.log(data.result); // => {id: 3423, title: "New post", body: "Body text"}
 
-store.clearCache("posts", data.cacheKey); // clear client cache for posts, so new data will be fetched when route is reloaded
+  store.clearCache("posts", data.cacheKey); // clear client cache for posts, so new data will be fetched when route is reloaded
   router("/posts"); // navigate to posts index, will re-fetch posts from API as cache was cleared
 });
 
@@ -193,13 +195,13 @@ module.exports = {
 
 Your routes will get picked by **client.js** and **server.js** and generate exactly same response in both environments.
 
-You need to wrap your route handlers to promises as router expects all handlers to return promises.
+Your route handlers can return either promises or strings, cerebellum will handle both use cases.
 
 In route handler's **this** scope you have **this.store** which is the reference to Store instance. It contains all your stores.
 
-On the server Store is initialized for every request and on the client it's created only once, in the application's initialtialization phase.
+On the server Store is initialized for every request and on the client it's created only once, in the application's initialization phase.
 
-Server exports store contents to JSON at the end of request and client bootstraps itself from that data.
+Server serializes all Store content to JSON at the end of a request and client then deserializes JSON and bootstraps itself from that data.
 
 ### Stores (stores.js)
 
@@ -219,7 +221,7 @@ Return an object of store ids and stores. These will be registered to be used wi
 
 ### Server (server.js)
 
-Server is responsible for rendering the first page for the user. Under the hood server creates express.js app.
+Server is responsible for rendering the first page for the user. Under the hood server creates express.js app and server constructor returns reference to that express app instance.
 
 Server is initialized by calling **cerebellum.server(options)**
 
@@ -249,11 +251,16 @@ options.staticFiles = __dirname + "/public"
 
 #### options.middleware
 
-Array of middleware, each of them will be passed to express.use
+Array of middleware functions, each of them will be passed to express.use.
+You can also include array with route & function.
 
 ```javascript
 var compress = require('compression');
-options.middleware = [compress()];
+var auth = require('./lib/auth');
+options.middleware = [
+  compress(),
+  ["/admin", auth()]
+];
 ```
 
 #### useStatic
@@ -344,8 +351,7 @@ Stats site for Finnish hockey league (Liiga)
 ## Future improvements
 
 - Replace exoskeleton models & collections with something that does not provide anything extra, we don't really need setters & event system, they are handled by Store.
-- More examples, example app with authentication & real API usage
-- Find out if APIs could be queried on server side with same interface but less overhead (HTTP request overhead could be eliminated if API server is on the same machine)
+- More examples
 
 ## License
 MIT, see LICENSE.
