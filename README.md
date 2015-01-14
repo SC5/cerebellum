@@ -1,5 +1,7 @@
 ## Cerebellum.js
 
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/SC5/cerebellum?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Cerebellum.js is a powerful set of tools that help you structure your isomorphic apps, just add your preferred view engine.
 
 With Cerebellum you can fully share the code for your GET routes, same code works on server and client, perfect for single-page apps.
