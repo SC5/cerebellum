@@ -37,7 +37,7 @@
         setTimeout(function() {
           appContainer.innerHTML.should.equal("index content");
            done();
-        }, 0);
+        }, 10);
       };
       cerebellum.client(options);
     });
