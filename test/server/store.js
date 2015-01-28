@@ -28,6 +28,15 @@ nock('http://cerebellum.local')
 });
 
 nock('http://cerebellum.local')
+.get('/model')
+.times(2)
+.reply(200, {});
+
+nock('http://cerebellum.local')
+.get('/nocachekeycollection')
+.reply(200, []);
+
+nock('http://cerebellum.local')
 .post('/cars/Ferrari')
 .times(2)
 .reply(200, {
@@ -83,7 +92,7 @@ nock('http://cerebellum.local')
 // Stores
 var stores = {
   model: Model.extend({
-
+    url: "http://cerebellum.local/model"
   }),
   collection: Collection.extend({
     cacheKey: function() {
@@ -104,6 +113,9 @@ var stores = {
     url: function() {
       return "http://cerebellum.local/cars";
     }
+  }),
+  noCacheKeyCollection: Collection.extend({
+    url: "http://cerebellum.local/nocachekeycollection"
   })
 };
 
@@ -194,10 +206,24 @@ describe('Store', function() {
       });
     });
 
-    it('should throw error if cacheKey method is not implemented', function() {
+    it('should throw error if there\'s no cacheKey', function() {
       var store = new Store(stores);
       return store.fetch("model").catch(function(error) {
         error.message.should.equal("Store model has no cacheKey method.");
+      });
+    });
+
+    it('should use model\'s storeOptions.id as fallback cacheKey', function() {
+      var store = new Store(stores);
+      return store.fetch("model", {id: "example"}).then(function() {
+        should.exist(store.cached["model"]["example"]);
+      });
+    });
+
+    it('cacheKey should be optional for collections', function() {
+      var store = new Store(stores);
+      return store.fetch("noCacheKeyCollection").then(function() {
+        should.exist(store.cached["noCacheKeyCollection"]["/"]);
       });
     });
 
@@ -263,14 +289,16 @@ describe('Store', function() {
           "Ferrari": {manufacturer: "Ferrari"},
           "Lotus": {manufacturer: "Lotus"}
         },
-        cars: {}
+        cars: {},
+        noCacheKeyCollection: {}
       });
 
       store.export().should.be.eql(JSON.stringify({
         model: {},
         collection: {},
         car: {},
-        cars: {}
+        cars: {},
+        noCacheKeyCollection: {}
       }));
 
       return Promise.all([
