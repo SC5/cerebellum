@@ -70,6 +70,16 @@ nock('http://cerebellum.local')
   manufacturer: "Bugatti"
 });
 
+nock('http://cerebellum.local')
+.get('/cars')
+.reply(200, [
+  {manufacturer: "Bugatti"},
+  {manufacturer: "Ferrari"},
+  {manufacturer: "Lotus"},
+  {manufacturer: "Maserati"},
+  {manufacturer: "Pagani"}
+]);
+
 // Stores
 var stores = {
   model: Model.extend({
@@ -303,6 +313,28 @@ describe('Store', function() {
           manufacturer: "Ferrari",
           model: "F40"
         });
+      });
+    });
+  });
+
+  describe('instantResolve', function() {
+    it('should resolve fetch promise instantly when passing instantResolve = true', function(done) {
+      var store = new Store(stores, {instantResolve: true});
+      store.on("fetch:cars", function(err, cars) {
+        if (err) {
+          done(err);
+        }
+        cars.should.eql([
+          {manufacturer: "Bugatti"},
+          {manufacturer: "Ferrari"},
+          {manufacturer: "Lotus"},
+          {manufacturer: "Maserati"},
+          {manufacturer: "Pagani"}
+        ]);
+        done();
+      });
+      store.fetch("cars").then(function(cars) {
+        cars.should.eql([]);
       });
     });
   });
