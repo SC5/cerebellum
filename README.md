@@ -21,25 +21,56 @@ Cerebellum is designed for single-page apps that need search engine visibility. 
 
 Cerebellum's data flow is in many ways similar to [Flux architecture](https://facebook.github.io/flux/), but it has some key differences.
 
-![cerebellum data flow](http://i.imgur.com/S6M9wiS.png "Cerebellum data flow")
+Diagram below shows the data flow for client side. Server side is identical, except that there are naturally no interaction triggered updates (green arrows).
 
-### Server and Client
-
-1) User requests a page, first server/client will ask from router to check for matching route.
-
-2) When router finds a matching route handler, it will query Store's stores (models & collections) for data.
-
-3) Store will either call APIs (always on server) or use cached data (never on server). Store returns data to route handler and route handler returns view component with data to client.
-
-4) Server/client renders the returned view component.
-
-### Client only (green arrows)
+![cerebellum data flow](http://i.imgur.com/b1rDlpd.png "Cerebellum data flow")
 
 **All rendering happens through router in Cerebellum, every data refresh requires invoking route handler.**
 
-Views can trigger change events to stores (create, update, delete, expire) which will be handled by Store. Store calls corresponding store API and triggers an event (create:storeName, update:storeName, delete:storeName or expire:storeName).
+### Server and client data flow example
+
+1) User requests a page at **/posts/1**
+
+2) Server or client will ask from router to check for a route that matches "/posts/1".
+
+2) Router finds a matching route handler at "/posts/:id" and queries Store's post store (which is a model) with parameter `{id: id}`.
+
+3) Store will either invoke `GET /api/posts/1` call or use cached post data (if available).
+
+4) Store returns post data to route handler
+
+5) Route handler passes data to Post view component
+
+6) Server or client renders the returned view component
+
+### Triggering changes with client side change events (green arrows)
+
+Views can trigger change events (**create**, **update**, **delete** or **expire**) with Store's **trigger** method. Store delegates change event to corresponding store and invokes API request. When request is completed, Store triggers completion event (**create:storeId**, **update:storeName**, **delete:storeName** or **expire:storeName**).
 
 Client can listen for these events. In store event callbacks you can clear caches and re-render current route (or invoke another route handler). There's also an option to automatically clear caches for stores.
+
+### Change events example
+
+Let's say that reader wants to add a comment to a blog post. We want to persist that comment to server and re-render the blog post.
+
+1) When our avid reader clicks "Send comment" button, view triggers change event with `store.trigger("create", "comments", {id: this.props.id}, {name: "Hater", comment: "This example sucks!"})`
+
+2) Store makes a API call `POST /api/posts/1/comments` to create a new comment with our data
+
+3) Store automatically clears the client side cache for this particular post's comments and triggers `create:comments` event
+
+4) We have a event handler in `client.js` which invokes the **/posts/1** route handler
+
+```javascript
+client.store.on("create:comments", function(err, data) {
+  // document.location.pathname is the current url,
+  // you could also use "/posts/" + data.options.id;
+  client.router.replace(document.location.pathname);
+});
+```
+5) Route handler re-fetches comments collection for this post as its cache was cleared
+
+6) When comments collection has been fetched, the blog post gets re-rendered with the new comment
 
 ## Store
 
