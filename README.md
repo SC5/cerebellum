@@ -243,7 +243,13 @@ Return an object of store ids and stores. These will be registered to be used wi
 
 Server is responsible for rendering the first page for the user. Under the hood server creates an express.js app and server constructor returns reference to that express app instance.
 
-Server is initialized by calling **cerebellum.server(options)**
+Server is initialized by calling:
+
+```javascript
+var app = cerebellum.server(options, routeContext);
+```
+
+If you want to customize route handler's **this** context, pass your own context as **routeContext**. routeContext must be an object. Cerebellum will automatically add **store** to the context, if you don't want this, use the **initStore: false** option.
 
 See **"Options (options.js)"** section for shared options **(routes, storeId, stores ...)**, options below are server only.
 
@@ -296,7 +302,13 @@ app.useStatic();
 
 Client is responsible for managing the application after getting the initial state from server.
 
-Client is initialized by calling **cerebellum.client(options)**
+Client is initialized by calling:
+
+```javascript
+cerebellum.client(options, routeContext);
+```
+
+If you want to customize route handler's **this** context, pass your own context as **routeContext**. routeContext must be an object. Cerebellum will automatically add **store** to the context, if you don't want this, use the **initStore: false** option.
 
 See **"Options (options.js)"** section for shared options **(routes, storeId, stores ...)**, options below are client only.
 
