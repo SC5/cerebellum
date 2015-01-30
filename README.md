@@ -344,11 +344,13 @@ Internet Explorer 9 and newer, uses ES5 and needs pushState.
 
 ## Apps using Cerebellum
 
-[urls](https://github.com/SC5/cerebellum-urls)
+### [urls](https://github.com/SC5/cerebellum-urls)
 Sample app for saving & tagging urls, demonstrates CRUD & authorization
 
-[LiigaOpas](http://liiga.pw)
+### [LiigaOpas](http://liiga.pw)
 Stats site for Finnish hockey league (Liiga)
+
+Source available at [https://github.com/hoppula/liiga](https://github.com/hoppula/liiga)
 
 ## Future improvements
 
