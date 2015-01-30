@@ -3,9 +3,8 @@ var nock = require('nock');
 require('native-promise-only');
 
 var Store = require('../../lib/store');
-var exoskeleton = require("../../lib/wrapper/exoskeleton");
-var Collection = exoskeleton.Collection;
-var Model = exoskeleton.Model;
+var Collection = require('../..').Collection;
+var Model = require('../..').Model;
 
 // Mocks
 nock('http://cerebellum.local')

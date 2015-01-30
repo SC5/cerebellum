@@ -2,12 +2,11 @@ var should = require('should');
 var cheerio = require('cheerio');
 require('native-promise-only');
 
-var exoskeleton = require("../../lib/wrapper/exoskeleton");
 var Server = require('../../lib/server');
 var Store = require('../../lib/store');
+var Collection = require('../..').Collection;
+var Model = require('../..').Model;
 
-var Collection = exoskeleton.Collection;
-var Model = exoskeleton.Model;
 var appId = "app";
 var storeId = "store_state_from_server";
 
