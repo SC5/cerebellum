@@ -21,7 +21,7 @@ nock('http://cerebellum.local')
 
 nock('http://cerebellum.local')
 .get('/cars/Ferrari')
-.times(8)
+.times(9)
 .reply(200, {
   manufacturer: "Ferrari"
 });
@@ -37,7 +37,7 @@ nock('http://cerebellum.local')
 
 nock('http://cerebellum.local')
 .post('/cars/Ferrari')
-.times(2)
+.times(3)
 .reply(200, {
   manufacturer: "Ferrari",
   model: "F40"
@@ -80,6 +80,7 @@ nock('http://cerebellum.local')
 
 nock('http://cerebellum.local')
 .get('/cars')
+.times(2)
 .reply(200, [
   {manufacturer: "Bugatti"},
   {manufacturer: "Ferrari"},
@@ -100,6 +101,9 @@ var stores = {
     url: "http://cerebellum.local/collection/1"
   }),
   car: Model.extend({
+    relatedCaches: function() {
+      return {"cars": "/"};
+    },
     cacheKey: function() {
       return this.storeOptions.id;
     },
@@ -108,7 +112,6 @@ var stores = {
     }
   }),
   cars: Collection.extend({
-    cacheKey: "cars",
     url: function() {
       return "http://cerebellum.local/cars";
     }
@@ -255,7 +258,7 @@ describe('Store', function() {
     });
   });
 
-  describe('import', function() {
+  describe('bootstrap', function() {
     it('should set caches from initial JSON', function() {
       var store = new Store(stores);
       var json = JSON.stringify({
@@ -266,7 +269,7 @@ describe('Store', function() {
           "Lotus": {manufacturer: "Lotus"}
         }
       });
-      store.import(json);
+      store.bootstrap(json);
 
       Object.keys(store.cached["car"]).length.should.be.equal(2);
       Object.keys(store.cached["model"]).length.should.be.equal(0);
@@ -278,8 +281,8 @@ describe('Store', function() {
     });
   });
 
-  describe('export', function() {
-    it('should export current cached stores to JSON', function() {
+  describe('snapshot', function() {
+    it('should export snapshot of currently cached stores to JSON', function() {
       var store = new Store(stores);
       var expectedJSON = JSON.stringify({
         model: {},
@@ -292,7 +295,7 @@ describe('Store', function() {
         noCacheKeyCollection: {}
       });
 
-      store.export().should.be.eql(JSON.stringify({
+      store.snapshot().should.be.eql(JSON.stringify({
         model: {},
         collection: {},
         car: {},
@@ -305,7 +308,7 @@ describe('Store', function() {
         store.fetch("car", {id: "Lotus"}),
         store.fetch("collection")
       ]).then(function() {
-        store.export().should.be.eql(expectedJSON);
+        store.snapshot().should.be.eql(expectedJSON);
       });
     });
   });
@@ -332,7 +335,7 @@ describe('Store', function() {
       return store.fetch("car", {id: "Ferrari"}).then(function() {
         store.on("update:car", function(err, options) {
           should.exist(store.cached.car.Ferrari);
-          store.clearCache("car", options.cacheKey);
+          store.clearCache("car");
           should.not.exist(store.cached.car.Ferrari);
         });
         should.exist(store.cached.car.Ferrari);
@@ -340,6 +343,28 @@ describe('Store', function() {
           manufacturer: "Ferrari",
           model: "F40"
         });
+      });
+    });
+
+    it('should clear related caches when using relatedCaches', function(done) {
+      var store = new Store(stores, {autoClearCaches: true});
+
+      store.on("update:car", function(err, data) {
+        if (err) {
+          done(err);
+        }
+        should.not.exist(store.cached.car.Ferrari);
+        store.cached.cars.should.be.empty;
+        done();
+      });
+
+      return Promise.all([
+        store.fetch("car", {id: "Ferrari"}),
+        store.fetch("cars")
+      ]).then(function() {
+        should.exist(store.cached.car.Ferrari);
+        store.cached.cars.should.not.be.empty;
+        store.trigger("update", "car", {id: "Ferrari"}, {model: "F40"});
       });
     });
   });
@@ -389,7 +414,7 @@ describe('Store', function() {
       var store = new Store(stores);
       store.on("create:cars", function(err, data) {
         should.not.exist(err);
-        data.cacheKey.should.equal("cars");
+        data.cacheKey.should.equal("/");
         data.store.should.equal("cars");
         data.options.should.eql({});
         data.result.get("manufacturer").should.equal("Bugatti");

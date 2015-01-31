@@ -280,7 +280,7 @@ Server is initialized by calling:
 var app = cerebellum.server(options, routeContext);
 ```
 
-If you want to customize route handler's **this** context, pass your own context as **routeContext**. routeContext must be an object. Cerebellum will automatically add **store** to the context, if you don't want this, use the **initStore: false** option.
+If you want to customize route handler's **this** context, pass your own context as **routeContext**. routeContext must be an object or a promise that resolves with an object. Cerebellum will automatically add **store** to the context. If you don't want this, use the **initStore: false** option.
 
 See **"Options (options.js)"** section for shared options **(routes, storeId, stores ...)**, options below are server only.
 
@@ -339,7 +339,7 @@ Client is initialized by calling:
 cerebellum.client(options, routeContext);
 ```
 
-If you want to customize route handler's **this** context, pass your own context as **routeContext**. routeContext must be an object. Cerebellum will automatically add **store** to the context, if you don't want this, use the **initStore: false** option.
+If you want to customize route handler's **this** context, pass your own context as **routeContext**. routeContext must be an object or a promise that resolves with an object. Cerebellum will automatically add **store** to the context. If you don't want this, use the **initStore: false** option.
 
 See **"Options (options.js)"** section for shared options **(routes, storeId, stores ...)**, options below are client only.
 
@@ -375,7 +375,57 @@ With this option Store will automatically clear cache for matching cacheKey afte
 options.autoClearCaches = true;
 ```
 
-### Usage with React
+## Models & Collections
+
+### Model options
+
+[Model documentation for Backbone](http://backbonejs.org/#Model) applies to Cerebellum models, but there are some extra options that can be utilized.
+
+#### cacheKey
+
+Optional property or method, should return the cache key for model. This will be generated automatically if not provided (you must provide storeOptions.id for automatic generation).
+
+```javascript
+cacheKey: function() {
+	return "myCustomPrefix:"+this.storeOptions.id; // defaults to this.storeOptions.id
+}
+```
+
+#### relatedCaches
+
+With **relatedCaches** method you can define additional cache sweeps that happen when model's cache gets cleared.
+
+```javascript
+relatedCaches: function() {
+	return {"comments": this.storeOptions.id};
+}
+```
+
+### Collection options
+
+[Collection documentation for Backbone](http://backbonejs.org/#Collection) applies to Cerebellum collections, but the are some extra options that can be utilized.
+
+#### cacheKey
+
+Optional property or method, should return the cache key for collection. This will be generated automatically if not provided.
+
+```javascript
+cacheKey: function() {
+	return "myCustomPrefix:"+this.storeOptions.id; // defaults to this.storeOptions.id
+}
+```
+
+#### relatedCaches
+
+With **relatedCaches** method you can define additional cache sweeps that happen when collection's cache gets cleared.
+
+```javascript
+relatedCaches: function() {
+	return {"posts": "/"};
+}
+```
+
+## Usage with React
 
 Cerebellum works best with [React](http://facebook.github.io/react/).
 
