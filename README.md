@@ -154,12 +154,12 @@ options.initialize = function(client) {
   store.on("create:posts", function(err, data) {
     console.log(data.store) // => posts
     console.log(data.result); // => {id: 3423, title: "New post", body: "Body text"}
-    router("/posts"); // navigate to posts index, will re-fetch posts from API as cache was cleared
+    router("/posts"); // navigate to posts index, will re-fetch posts from API as cache was automatically cleared
   });
 
   store.on("update:post", function(err, data) {
     // explicitly clear posts collection in addition to automatically cleared post model
-    store.clearCache("posts", "posts");
+    store.clearCache("posts");
     router.replace("/posts/" + data.options.id); // re-render route, posts collection & post model will be re-fetched
   });
 
