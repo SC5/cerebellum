@@ -2,7 +2,7 @@
 
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/SC5/cerebellum?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-Cerebellum.js is a powerful set of tools that help you structure your isomorphic apps, just add your preferred view engine.
+Cerebellum.js is a powerful set of tools that help you structure your isomorphic apps, just add your preferred view engine. Cerebellum works great in conjunction with [React](http://facebook.github.io/react/).
 
 Cerebellum is designed for single-page apps that need search engine visibility. Same code works on server and client.
 
@@ -12,6 +12,7 @@ Cerebellum is designed for single-page apps that need search engine visibility. 
 * Fully shared data stores between server and client, uses [Vertebrae's](https://github.com/hoppula/vertebrae/) Collection & Model with [Axios](https://github.com/mzabriskie/axios) adapter, so you can use the same REST APIs everywhere.
 * Stores the server state snapshot to JSON and browser client will automatically bootstrap from that, so you don't need to do any extra requests on client side.
 * Uses [express.js](http://expressjs.com/) router on server and [page.js](https://github.com/visionmedia/page.js) router on browser. Both use same [route format](https://github.com/pillarjs/path-to-regexp), so you can use named parameters, optional parameters and regular expressions in your routes.
+* Unidirectional data flow, central Store acts as a dispatcher
 * Automatic SEO, no hacks needed for server side rendering. 
 * You can easily make apps that work even when JavaScript is disabled in browser
 * Fast initial load for mobile clients, browser bootstraps from server state and continues as a single-page app without any extra configuration.
@@ -19,13 +20,17 @@ Cerebellum is designed for single-page apps that need search engine visibility. 
 
 ## Data flow
 
-Cerebellum's data flow is in many ways similar to [Flux architecture](https://facebook.github.io/flux/), but it has some key differences.
+Cerebellum's data flow is unidirectional and in many ways similar to [Flux architecture](https://facebook.github.io/flux/), but it has some key differences.
 
 Diagram below shows the data flow for client side. Server side is identical, except that there are naturally no interaction triggered updates (green arrows).
 
 ![cerebellum data flow](http://i.imgur.com/b1rDlpd.png "Cerebellum data flow")
 
-**All rendering happens through router in Cerebellum, every data refresh requires invoking route handler.**
+In a nutshell, route handler asks stores for data and renders a view with the response. 
+
+When you want to change things, you send change event to central Store instance. Store will perform the API call and trigger a success event when it's ready. You can then act on that event by invoking a route handler again.
+
+**All rendering happens through route handlers in Cerebellum.**
 
 ### Server and client data flow example
 
@@ -74,9 +79,9 @@ client.store.on("create:comments", function(err, data) {
 
 ## Store
 
-Store is responsible for handling all data operations in Cerebellum.
+Store is responsible for handling all data operations in Cerebellum. It receives change events for individual stores, performs changes and notifies client by triggering success events.
 
-You register your collections and models (stores) to Store by passing them to server and client constructors in **options.stores** (see "Stores (stores.js)" section below for more details).
+You register your collections and models (stores) to Store by passing them to server and client constructors in **options.stores** (see **"Stores (stores.js)"** section below for more details).
 
 Store will automatically snapshot its state on server and client will bootstrap Store from that state. Client will also cache all additional API requests, but you can easily clear caches when fresh data is needed.
 
@@ -159,8 +164,10 @@ options.initialize = function(client) {
 
   store.on("update:post", function(err, data) {
     // explicitly clear posts collection in addition to automatically cleared post model
+    // you could also handle this in post model with relatedCaches method
     store.clearCache("posts");
-    router.replace("/posts/" + data.options.id); // re-render route, posts collection & post model will be re-fetched
+    // re-render route, posts collection & post model will be re-fetched
+    router.replace("/posts/" + data.options.id);
   });
 
 };
@@ -376,6 +383,9 @@ options.autoClearCaches = true;
 ```
 
 ## Models & Collections
+
+Cerebellum comes with models & collections from CommonJS version of Backbone, [Vertebrae](https://www.npmjs.com/package/vertebrae). 
+However, you could roll your own implementations as Cerebellum's Store has no dependencies to any model or collection libraries.
 
 ### Model options
 
