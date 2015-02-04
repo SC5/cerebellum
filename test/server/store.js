@@ -404,7 +404,7 @@ describe('Store', function() {
     it('should trigger error when create fails', function(done) {
       var store = new Store(stores);
       store.on("create:cars", function(err, data) {
-        err.message.should.equal("Internal server error");
+        err.message.should.equal("Creating new item to store 'cars' failed");
         done();
       });
       store.trigger("create", "cars", {manufacturer: "Mercedes-Benz"});
@@ -436,7 +436,7 @@ describe('Store', function() {
     it('should trigger error when update fails', function(done) {
       var store = new Store(stores);
       store.on("update:car", function(err, data) {
-        err.message.should.equal("Internal server error");
+        err.message.should.equal("Updating 'car' failed");
         done();
       });
       store.trigger("update", "car", {id: "Lotus"}, {manufacturer: "Lotus", model: "Exige"});
@@ -469,7 +469,7 @@ describe('Store', function() {
     it('should trigger error when delete fails', function(done) {
       var store = new Store(stores);
       store.on("delete:car", function(err, data) {
-        err.message.should.equal("Unauthorized");
+        err.message.should.equal("Deleting 'car' failed");
         done();
       });
       store.trigger("delete", "car", {id: "Lotus"});
