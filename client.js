@@ -4,8 +4,8 @@ var extend = require('vertebrae/utils').extend;
 var Events = require('vertebrae/Events');
 var Store = require('./store');
 var DOMReady = require('./domready');
-var validateOptions = require('./validate-options');
-var utils = require('./utils');
+var validateOptions = require('./lib/validate-options');
+var utils = require('./lib/utils');
 require('native-promise-only');
 require('html5-history-api');
 

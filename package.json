@@ -33,7 +33,7 @@
   },
   "main": "index.js",
   "browser": {
-    "./lib/server": false
+    "./server": false
   },
   "repository": {
     "type": "git",

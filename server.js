@@ -1,9 +1,9 @@
 var fs = require('fs');
 var express = require('express');
 var cheerio = require('cheerio');
-var utils = require('./utils');
+var utils = require('./lib/utils');
 var Store = require('./store');
-var validateOptions = require('./validate-options');
+var validateOptions = require('./lib/validate-options');
 require('native-promise-only');
 
 function Server(options, routeContext) {

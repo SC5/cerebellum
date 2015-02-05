@@ -2,8 +2,8 @@ var should = require('should');
 var cheerio = require('cheerio');
 require('native-promise-only');
 
-var Server = require('../../lib/server');
-var Store = require('../../lib/store');
+var Server = require('../../server');
+var Store = require('../../store');
 var Collection = require('../..').Collection;
 var Model = require('../..').Model;
 

@@ -2,7 +2,7 @@ var should = require('should');
 var nock = require('nock');
 require('native-promise-only');
 
-var Store = require('../../lib/store');
+var Store = require('../../store');
 var Collection = require('../..').Collection;
 var Model = require('../..').Model;
 
