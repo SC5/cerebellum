@@ -6,6 +6,8 @@ Cerebellum.js is a powerful set of tools that help you structure your isomorphic
 
 Cerebellum is designed for single-page apps that need search engine visibility. Same code works on server and client.
 
+[Introductory blog post, published on February 5, 2015.](http://sc5.io/posts/cerebellum-js-uncomplicated-isomorphic-javascript-apps)
+
 ### What does it do?
 
 * Fully shared GET routes between server and client
