@@ -24,7 +24,11 @@ Cerebellum's data flow is unidirectional and in many ways similar to [Flux archi
 
 Diagram below shows the data flow for client side. Server side is identical, except that there are naturally no interaction triggered updates (green arrows).
 
-![cerebellum data flow](http://i.imgur.com/b1rDlpd.png "Cerebellum data flow")
+&nbsp;
+
+![Cerebellum data flow](http://i.imgur.com/fuxe9Sw.png "Cerebellum data flow")
+
+&nbsp;
 
 In a nutshell, route handler asks stores for data and renders a view with the response. 
 
