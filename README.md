@@ -12,7 +12,7 @@ Cerebellum is designed for single-page apps that need search engine visibility. 
 * Fully shared data stores between server and client, uses [Vertebrae's](https://github.com/hoppula/vertebrae/) Collection & Model with [Axios](https://github.com/mzabriskie/axios) adapter, so you can use the same REST APIs everywhere.
 * Stores the server state snapshot to JSON and browser client will automatically bootstrap from that, so you don't need to do any extra requests on client side.
 * Uses [express.js](http://expressjs.com/) router on server and [page.js](https://github.com/visionmedia/page.js) router on browser. Both use same [route format](https://github.com/pillarjs/path-to-regexp), so you can use named parameters, optional parameters and regular expressions in your routes.
-* Unidirectional data flow, central Store acts as a dispatcher
+* Data flows from models/collections to views and views can report changes with change events. All rendering happens through router.
 * Automatic SEO, no hacks needed for server side rendering. 
 * You can easily make apps that work even when JavaScript is disabled in browser
 * Fast initial load for mobile clients, browser bootstraps from server state and continues as a single-page app without any extra configuration.
@@ -20,7 +20,7 @@ Cerebellum is designed for single-page apps that need search engine visibility. 
 
 ## Data flow
 
-Cerebellum's data flow is unidirectional and in many ways similar to [Flux architecture](https://facebook.github.io/flux/), but it has some key differences.
+Cerebellum's data flow is similar to [Flux architecture](https://facebook.github.io/flux/) in many ways, but it has some key differences.
 
 Diagram below shows the data flow for client side. Server side is identical, except that there are naturally no interaction triggered updates (green arrows).
 
@@ -32,7 +32,7 @@ Diagram below shows the data flow for client side. Server side is identical, exc
 
 In a nutshell, route handler asks stores for data and renders a view with the response. 
 
-When you want to change things, you send change event to central Store instance. Store will perform the API call and trigger a success event when it's ready. You can then act on that event by invoking a route handler again.
+When you want to change things, you send a change event to central Store instance. Store will perform the API call and trigger a success event when it's ready. You can then act on that event by invoking a route handler again.
 
 **All rendering happens through route handlers in Cerebellum.**
 
