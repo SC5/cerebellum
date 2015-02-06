@@ -341,6 +341,20 @@ var Store = (function() {
     });
   };
 
+  Store.prototype.fetchAll = function(options) {
+    var self = this;
+    var storeIds = Object.keys(options);
+    return Promise.all(storeIds.map(function(storeId) {
+      return self.fetch(storeId, options[storeId]);
+    })).then(function(results) {
+      var result = {};
+      for (var i = 0; i < storeIds.length; i++) {
+        result[storeIds[i]] = results[i];
+      };
+      return result;
+    });
+  };
+
   return Store;
 })();
 
