@@ -54,7 +54,8 @@ function Client(options, routeContext) {
         var context;
         var params = utils.extractParams(route, ctx.params);
         // add parsed query string object as last parameter for route handler
-        params.push(qs.parse(ctx.querystring));
+        var query = qs.parse(ctx.querystring);
+        params.push(query);
 
         if (typeof routeContext === "function") {
           context = routeContext.call({});
@@ -68,9 +69,12 @@ function Client(options, routeContext) {
           }
 
           return Promise.resolve(routes[route].apply(context, params)).then(function(options) {
-            var result = render(options);
-            client.trigger("render", route);
-            return result;
+            return Promise.resolve(
+              render.call(context, options, {params: ctx.params, query: query})
+            ).then(function(result) {
+              client.trigger("render", route);
+              return result;
+            });
           }).catch(function(error) {
             console.error("Render error while processing route "+ route +":", error);
           });

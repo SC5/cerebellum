@@ -91,7 +91,14 @@ function Server(options, routeContext) {
           if (context.store) {
             stateSnapshot( document, context.store.snapshot() );
           }
-          return res.send( render(document, options) );
+          return Promise.resolve(
+            render.call(context, document, options, {
+              params: req.params,
+              query: req.query
+            })
+          ).then(function(response) {
+            return res.send(response);
+          });
         }).catch(function(error) {
           if (app.routeError && typeof app.routeError === "function") {
             app.routeError(error);
