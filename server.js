@@ -86,7 +86,15 @@ function Server(options, routeContext) {
           context.store = new Store(stores, options);
         }
 
-        return Promise.resolve(routes[route].apply(context, params)).then(function(options) {
+        // do not invoke route handler directly if it provides title & fetch
+        var routeHandler;
+        if (routes[route].title && routes[route].fetch) {
+          routeHandler = routes[route];
+        } else {
+          routeHandler = routes[route].apply(context, params);
+        }
+
+        return Promise.resolve(routeHandler).then(function(options) {
           var document = cheerio.load(indexHTML);
           if (context.store) {
             stateSnapshot( document, context.store.snapshot() );

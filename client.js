@@ -68,7 +68,15 @@ function Client(options, routeContext) {
             context.store = store;
           }
 
-          return Promise.resolve(routes[route].apply(context, params)).then(function(options) {
+          // do not invoke route handler directly if it provides title & fetch
+          var routeHandler;
+          if (routes[route].title && routes[route].fetch) {
+            routeHandler = routes[route];
+          } else {
+            routeHandler = routes[route].apply(context, params);
+          }
+
+          return Promise.resolve(routeHandler).then(function(options) {
             return Promise.resolve(
               render.call(context, options, {params: ctx.params, query: query})
             ).then(function(result) {
