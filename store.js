@@ -1,5 +1,5 @@
 var extend = require('vertebrae/utils').extend;
-var Events = require('vertebrae/Events');
+var Events = require('vertebrae/events');
 require('native-promise-only');
 
 function createCacheKey(store) {
