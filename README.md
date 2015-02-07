@@ -15,7 +15,7 @@ Cerebellum is designed for single-page apps that need search engine visibility. 
 * Stores the server state snapshot to JSON and browser client will automatically bootstrap from that, so you don't need to do any extra requests on client side.
 * Uses [express.js](http://expressjs.com/) router on server and [page.js](https://github.com/visionmedia/page.js) router on browser. Both use same [route format](https://github.com/pillarjs/path-to-regexp), so you can use named parameters, optional parameters and regular expressions in your routes.
 * Data flows from models/collections to views and views can report changes with change events. All rendering happens through router.
-* Automatic SEO, no hacks needed for server side rendering. 
+* Automatic SEO, no hacks needed for server side rendering.
 * You can easily make apps that work even when JavaScript is disabled in browser
 * Fast initial load for mobile clients, browser bootstraps from server state and continues as a single-page app without any extra configuration.
 * Can be used with any framework that provides rendering for both server and client. [React.js](http://facebook.github.io/react/) recommended, see [examples/static-pages](https://github.com/SC5/cerebellum/tree/master/examples/static-pages).
@@ -32,7 +32,7 @@ Diagram below shows the data flow for client side. Server side is identical, exc
 
 &nbsp;
 
-In a nutshell, route handler asks stores for data and renders a view with the response. 
+In a nutshell, route handler asks stores for data and renders a view with the response.
 
 When you want to change things, you send a change event to central Store instance. Store will perform the API call and trigger a success event when it's ready. You can then act on that event by invoking a route handler again.
 
@@ -115,7 +115,7 @@ this.store.fetch("post", {id: id}).then(...);
 
 Store will populate its internal cache when calling **fetch()**. So when you request same data in different route on client, Store will return the cached data.
 
-Your models and collections can have `cacheKey` method, it defines the path where data will be cached in Store's cache. Store will automatically generate the `cacheKey` for collections and models if you don't provide one. Note that the model needs to be fetched with `id` parameter for automatic `cacheKey` generation. 
+Your models and collections can have `cacheKey` method, it defines the path where data will be cached in Store's cache. Store will automatically generate the `cacheKey` for collections and models if you don't provide one. Note that the model needs to be fetched with `id` parameter for automatic `cacheKey` generation.
 
 If you want to use **fetch** options as part of `cacheKey`, you can access them using `this.storeOptions`.
 
@@ -390,7 +390,7 @@ options.autoClearCaches = true;
 
 ## Models & Collections
 
-Cerebellum comes with models & collections from CommonJS version of Backbone, [Vertebrae](https://www.npmjs.com/package/vertebrae). 
+Cerebellum comes with models & collections from CommonJS version of Backbone, [Vertebrae](https://www.npmjs.com/package/vertebrae).
 However, you could roll your own implementations as Cerebellum's Store has no dependencies to any model or collection libraries.
 
 ### Model options
@@ -473,6 +473,9 @@ Internet Explorer 9 and newer, uses ES5 and needs pushState.
 
 ### [urls](https://github.com/SC5/cerebellum-urls)
 Sample app for saving & tagging urls, demonstrates CRUD & authorization
+
+### [Cereboard](https://github.com/hoppula/cereboard)
+Sample app on how to declare needed data directly in view components and keep the router clear of store.fetch calls.
 
 ### [LiigaOpas](http://liiga.pw)
 Stats site for Finnish hockey league (Liiga)
