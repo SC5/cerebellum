@@ -21,7 +21,7 @@ nock('http://cerebellum.local')
 
 nock('http://cerebellum.local')
 .get('/cars/Ferrari')
-.times(9)
+.times(11)
 .reply(200, {
   manufacturer: "Ferrari"
 });
@@ -80,7 +80,7 @@ nock('http://cerebellum.local')
 
 nock('http://cerebellum.local')
 .get('/cars')
-.times(2)
+.times(3)
 .reply(200, [
   {manufacturer: "Bugatti"},
   {manufacturer: "Ferrari"},
@@ -246,6 +246,36 @@ describe('Store', function() {
       });
     });
 
+  });
+
+  describe('fetchAll', function() {
+    it('should fetch all given stores with fetchAll', function() {
+      var store = new Store(stores);
+      return store.fetchAll({
+        "cars": {},
+        "car": {id: "Ferrari"}
+      }).then(function(result) {
+        result.should.eql({
+          cars: [
+            { manufacturer: 'Bugatti' },
+            { manufacturer: 'Ferrari' },
+            { manufacturer: 'Lotus' },
+            { manufacturer: 'Maserati' },
+            { manufacturer: 'Pagani' }
+          ],
+          car: { manufacturer: 'Ferrari' }
+        });
+      });
+    });
+    it('should fail with invalid store id', function() {
+      var store = new Store(stores);
+      return store.fetchAll({
+        "motorcycles": {},
+        "car": {id: "Ferrari"}
+      }).catch(function(err) {
+        err.message.should.equal("Store motorcycles not registered.");
+      });
+    });
   });
 
   describe('get', function() {
