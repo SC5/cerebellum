@@ -111,6 +111,12 @@ If your store needs to fetch dynamic data (models usually do), pass options to *
 this.store.fetch("post", {id: id}).then(...);
 ```
 
+You can also fetch multiple stores at once with **fetchAll**:
+
+```javascript
+this.store.fetchAll({"post": {id: id}, "comments": {id: id}}).then(...);
+```
+
 ### Caches and cacheKeys
 
 Store will populate its internal cache when calling **fetch()**. So when you request same data in different route on client, Store will return the cached data.
