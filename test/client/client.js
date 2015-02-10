@@ -138,7 +138,50 @@
 
     });
 
+    it('should be possible to render asynchronously with context and query params', function(done) {
 
+      var asyncOptions = {
+        appId: appId,
+        storeId: storeId,
+        initialize: function(client) {},
+        render: function(response, request) {
+          var context = this;
+          return new Promise(function(resolve, reject) {
+            setTimeout(function() {
+              appContainer.innerHTML = JSON.stringify({
+                response: response,
+                request: request,
+                storeExists: !!context.store
+              });
+              resolve(response);
+            }, 10);
+          });
+        },
+        routes: {
+          "/async/:id": function() {
+            return "async render";
+          }
+        },
+        stores: {}
+      };
+
+      asyncOptions.initialize = function(client) {
+        client.router.show("/async/1?q=hello");
+      };
+
+      var clientEvents = cerebellum.client(asyncOptions);
+
+      clientEvents.on("render", function(route) {
+        route.should.equal("/async/:id");
+        var result = JSON.parse(appContainer.innerHTML);
+        result.response.should.equal("async render");
+        result.request.params.should.eql({id: "1"});
+        result.request.query.should.eql({q: "hello"});
+        result.storeExists.should.equal(true);
+        clientEvents.off();
+        done();
+      });
+    });
 
   });
 

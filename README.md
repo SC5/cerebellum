@@ -303,9 +303,13 @@ If you want to customize route handler's **this** context, pass your own context
 
 See **"Options (options.js)"** section for shared options **(routes, storeId, stores ...)**, options below are server only.
 
-#### options.render(document, options={})
+#### options.render(document, options={}, request={params: {}, query: {}})
 
-Route handler will call server's render with document and its options. document is a cheerio instance containing the `index.html` content.
+Route handler will call server's render with document, its options and request object. document is a cheerio instance containing the `index.html` content.
+
+Render method is invoked with route handler's this context.
+
+Render method can return either a string or a promise resolving with string.
 
 Example server render function:
 
@@ -362,9 +366,11 @@ If you want to customize route handler's **this** context, pass your own context
 
 See **"Options (options.js)"** section for shared options **(routes, storeId, stores ...)**, options below are client only.
 
-#### options.render(options={})
+#### options.render(options={}, request={params:{}, query:{}})
 
-Route handler will call client's render with its options when it gets resolved.
+Route handler will call client's render with its options and request object when it gets resolved.
+
+Render method is invoked with route handler's this context.
 
 ```javascript
 options.render = function(options) {
