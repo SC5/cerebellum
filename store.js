@@ -77,6 +77,9 @@ var Store = (function() {
     // allows Store to be used as event bus
     extend(this, Events);
 
+    // alias 'trigger' as 'dispatch'
+    this.dispatch = this.trigger;
+
     // callbacks expect: storeId, storeOptions, params
     this.on({
       "create": this.onCreate,
