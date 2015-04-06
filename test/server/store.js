@@ -17,6 +17,10 @@ nock('http://cerebellum.local')
 
 nock('http://cerebellum.local')
 .get('/collection/1')
+.reply(403);
+
+nock('http://cerebellum.local')
+.get('/collection/1')
 .reply(401);
 
 nock('http://cerebellum.local')
@@ -191,6 +195,15 @@ describe('Store', function() {
       return store.fetch("collection").catch(function(err) {
         err.status.should.equal(500);
         err.data.should.equal("Internal server error");
+      });
+    });
+
+    it('should reject 40x response statuses if explicitly passing empty array for allowedStatusCodes', function() {
+      var store = new Store(stores, {allowedStatusCodes: []});
+      var original = store.get("collection");
+      original.storeOptions = {};
+      return store.fetch("collection").catch(function(err) {
+        err.status.should.equal(403);
       });
     });
 
