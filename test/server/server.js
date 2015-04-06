@@ -29,7 +29,7 @@ describe('Server', function() {
         },
         "/person": function() {
           return this.store.fetch("person").then(function(person) {
-            return {value: person.value};
+            return {value: person.get("value")};
           });
         }
       },

@@ -95,11 +95,9 @@ function Client(options, routeContext) {
     page();
 
     if (initializeCallback && typeof initializeCallback === "function") {
-      DOMReady.then(function() {
-        initializeCallback.call(null, {
-          router: page,
-          store: store
-        });
+      initializeCallback.call(null, {
+        router: page,
+        store: store
       });
     }
 

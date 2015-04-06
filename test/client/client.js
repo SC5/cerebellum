@@ -34,7 +34,7 @@
           },
           "/movies": function() {
             return this.store.fetch("movies").then(function(movies) {
-              return {value: movies.map(function(movie) { return movie.name; }).join(",")};
+              return {value: movies.map(function(movie) { return movie.get("name"); }).join(",")};
             });
           }
         },

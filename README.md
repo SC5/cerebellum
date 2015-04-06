@@ -12,12 +12,13 @@ Cerebellum is designed for single-page apps that need search engine visibility. 
 
 * Fully shared GET routes between server and client
 * Fully shared data stores between server and client, uses [Vertebrae's](https://github.com/hoppula/vertebrae/) Collection & Model with [Axios](https://github.com/mzabriskie/axios) adapter, so you can use the same REST APIs everywhere.
-* Stores the server state snapshot to JSON and browser client will automatically bootstrap from that, so you don't need to do any extra requests on client side.
+* Stores the server state snapshot to JSON. Browser client will automatically bootstrap from snapshot, you don't need to do any extra requests on client side.
 * Uses [express.js](http://expressjs.com/) router on server and [page.js](https://github.com/visionmedia/page.js) router on browser. Both use same [route format](https://github.com/pillarjs/path-to-regexp), so you can use named parameters, optional parameters and regular expressions in your routes.
-* Data flows from models/collections to views and views can report changes with change events. All rendering happens through router.
+* Data flows from models/collections to views and views can dispatch changes with change events. All rendering happens through router.
 * Automatic SEO, no hacks needed for server side rendering.
 * You can easily make apps that work even when JavaScript is disabled in browser
 * Fast initial load for mobile clients, browser bootstraps from server state and continues as a single-page app without any extra configuration.
+* Store state is maintained in [immstruct](https://github.com/omniscientjs/immstruct)
 * Can be used with any framework that provides rendering for both server and client. [React.js](http://facebook.github.io/react/) recommended, see [examples/static-pages](https://github.com/SC5/cerebellum/tree/master/examples/static-pages).
 
 ## Data flow
@@ -56,7 +57,7 @@ When you want to change things, you send a change event to central Store instanc
 
 ### Triggering changes with client side change events (green arrows)
 
-Views can trigger change events (**create**, **update**, **delete** or **expire**) with Store's **trigger** method. Store delegates change event to corresponding store and invokes API request. When request is completed, Store triggers completion event (**create:storeId**, **update:storeName**, **delete:storeName** or **expire:storeName**).
+Views can trigger change events (`create`, `update`, `delete` or `expire`) with Store's `trigger` method (aliased as `dispatch`). Store delegates change event to corresponding store and invokes API request. When request is completed, Store triggers completion event (**create:storeId**, **update:storeName**, **delete:storeName** or **expire:storeName**).
 
 Client can listen for these events. In store event callbacks you can clear caches and re-render current route (or invoke another route handler). There's also an option to automatically clear caches for stores.
 
@@ -91,9 +92,11 @@ You register your collections and models (stores) to Store by passing them to se
 
 Store will automatically snapshot its state on server and client will bootstrap Store from that state. Client will also cache all additional API requests, but you can easily clear caches when fresh data is needed.
 
-### Models, Collections === read only
+### Models and Collections are immutable
 
-You should treat your models and collections as read only, all mutations are handled by Store with **create**, **update**, **delete** and **expire** events.
+All your stores are read only, state is stored in [immstruct](https://github.com/omniscientjs/immstruct). All mutations are handled by Store with **create**, **update**, **delete** and **expire** events.
+
+Using immstruct enables automatic optimistic updates and rollbacks (when sync fails) for stores.
 
 ### Fetching data inside routes
 
@@ -116,6 +119,8 @@ You can also fetch multiple stores at once with **fetchAll**:
 ```javascript
 this.store.fetchAll({"post": {id: id}, "comments": {id: id}}).then(...);
 ```
+
+**fetch** returns [Immutable.js Cursors](https://github.com/facebook/immutable-js/tree/master/contrib/cursor). If you're using React, [Omniscient's shouldUpdate mixin](https://github.com/omniscientjs/omniscient/blob/master/shouldupdate.js) works great with these cursors.
 
 ### Caches and cacheKeys
 
@@ -146,13 +151,13 @@ call `store.trigger` with **create**, **update**, **delete** or **expire**.
 For example, you would create a new post to "posts" collection by calling:
 
 ```javascript
-store.trigger("create", "posts", {title: "New post", body: "Body text"});
+store.dispatch("create", "posts", {title: "New post", body: "Body text"});
 ```
 
 You can update a model with:
 
 ```javascript
-store.trigger("update", "post", {id: id}, {
+store.dispatch("update", "post", {id: id}, {
   title: "New post",
   body: "New body text"
 });
@@ -184,9 +189,6 @@ options.initialize = function(client) {
 
 };
 
-// clear caches automatically after create, update & delete
-options.autoClearCaches = true;
-
 cerebellum.client(options);
 ```
 
@@ -206,8 +208,7 @@ module.exports = {
   routes: routes,
   storeId: "store_state_from_server",
   stores: stores,
-  autoToJSON: true,
-  autoClearCaches: false,
+  autoClearCaches: true,
   initStore: true,
   instantResolve: false
 };
@@ -225,13 +226,9 @@ DOM ID in index.html where server stores the JSON snapshot that client will use 
 
 Object containining store ids and stores. Best practice is to put these to their own file as well, see **"Stores (stores.js)"** documentation below.
 
-#### autoToJSON
-
-Call **toJSON()** automatically for **fetch** results. Defaults to true, set to false if you need to mutate your stores in route handlers before passing them to views as JSON (not encouraged, you should override **toJSON** instead).
-
 #### autoClearCaches
 
-Automatically clear the client Store cache for affected collection or model. Defaults to false. If this is not enabled you need to explicitly clear the caches in event handlers.
+Automatically clear the client Store cache for affected collection or model. Defaults to true. If this is not enabled you need to explicitly clear the caches in event handlers.
 
 #### initStore
 

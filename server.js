@@ -114,7 +114,7 @@ function Server(options, routeContext) {
           if (error.status && error.data) {
             return res.send("Error "+ error.status +": "+ error.data);
           } else {
-            return res.send("Error: "+ error);
+            return res.send("Error: "+ error.stack);
           }
         });
       });
