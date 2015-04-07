@@ -12,11 +12,11 @@ var Page = React.createClass({
 
         <Jumbotron>
           <h1>{this.props.title}</h1>
-          <p>{content.subTitle}</p>
+          <p>{content.get("subTitle")}</p>
         </Jumbotron>
 
         <Panel>
-          {content.body}
+          {content.get("body")}
         </Panel>
       </div>
     );

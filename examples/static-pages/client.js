@@ -15,4 +15,4 @@ options.initialize = function(client) {
   React.initializeTouchEvents(true);
 };
 
-var app = cerebellum.client(options);
+var app = new cerebellum.client(options);

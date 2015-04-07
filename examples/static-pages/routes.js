@@ -8,10 +8,10 @@ module.exports = {
 
     return this.store.fetch("page", {id: page}).then(function(pageStore) {
       return {
-        title: pageStore.title,
+        title: pageStore.get("title"),
         component: React.createElement(Page, {
-          title: pageStore.title,
-          content: pageStore.content || {}
+          title: pageStore.get("title"),
+          content: pageStore.get("content") || {}
         })
       };
     }).catch(function(err) {
