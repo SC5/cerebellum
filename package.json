@@ -3,15 +3,19 @@
   "version": "0.6.0",
   "description": "Controls your isomorphic apps",
   "scripts": {
-    "test_build": "browserify -u underscore -u jquery -s Cerebellum index.js -o test/client/cerebellum_test_build.js",
+    "build": "babel src --out-dir lib",
+    "watch": "babel src --watch --out-dir lib",
+    "test_build": "browserify -s Cerebellum index.js -o test/client/cerebellum_test_build.js",
     "test": "npm run test_server && npm run test_client",
     "test_server": "mocha test/server",
     "test_client": "npm run test_build && mocha-phantomjs -s loadImages=false http://localhost:8000/",
+    "prepublish": "npm run build",
     "start": "http-server test/client -p 8000"
   },
   "author": "Lari Hoppula",
   "license": "MIT",
   "devDependencies": {
+    "babel": "^5.1.10",
     "browserify": "^6.0.2",
     "http-server": "^0.7.1",
     "mocha": "^1.21.4",
