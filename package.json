@@ -30,7 +30,7 @@
     "express": "^4.12.3",
     "html5-history-api": "^4.2.0",
     "immstruct": "^1.4.0",
-    "immutable": "^3.7.2",
+    "immutable": "^3.0.2",
     "native-promise-only": "^0.7.8-a",
     "page": "^1.6.2",
     "path-to-regexp": "^1.0.3",
@@ -39,7 +39,7 @@
   },
   "main": "index.js",
   "browser": {
-    "./server": false
+    "./lib/server": false
   },
   "repository": {
     "type": "git",
