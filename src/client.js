@@ -1,89 +1,100 @@
-var page = require('page');
-var qs = require('qs');
-var extend = require('vertebrae/utils').extend;
-var Events = require('vertebrae/events');
-var Store = require('./store');
-var DOMReady = require('./domready');
-var validateOptions = require('./validate-options');
-var utils = require('./utils');
-require('native-promise-only');
-require('html5-history-api');
+import 'html5-history-api';
+import 'native-promise-only';
+import DOMReady from './domready';
+import Events from 'vertebrae/events';
+import page from 'page';
+import qs from 'qs';
+import Store from './store';
+import utils from './utils';
+import validateOptions from './validate-options';
+import {extend} from 'vertebrae/utils';
 
-function Client(options, routeContext) {
+function createStoreOptions(options={}) {
+  const storeOptions = {};
+
+  if (options.autoClearCaches) {
+    storeOptions.autoClearCaches = true;
+  }
+
+  if (typeof options.autoToJSON !== "undefined") {
+    storeOptions.autoToJSON = options.autoToJSON;
+  }
+
+  if (typeof options.instantResolve !== "undefined") {
+    storeOptions.instantResolve = options.instantResolve;
+  }
+
+  if (typeof options.allowedStatusCodes !== "undefined") {
+    storeOptions.allowedStatusCodes = options.allowedStatusCodes;
+  }
+
+  return storeOptions;
+}
+
+function Client(options={}, routeContext={}) {
   validateOptions(options);
-  var client = this;
-  var initializeCallback = options.initialize;
-  var render = options.render;
-  var routes = options.routes;
-  var storeId = options.storeId;
-  var stores = options.stores;
-  extend(this, Events);
 
-  var initStore = true;
-  if (typeof options.initStore !== "undefined") {
-    initStore = options.initStore;
-  }
+  // ensure proper initial state for page.js
+  page.stop();
+  page.callbacks = [];
+  page.exits = [];
 
-  if (initStore) {
-    var storeOptions = {};
-    if (options.autoClearCaches) {
-      storeOptions.autoClearCaches = true;
-    }
-    if (typeof options.autoToJSON !== "undefined") {
-      storeOptions.autoToJSON = options.autoToJSON;
-    }
-    if (typeof options.instantResolve !== "undefined") {
-      storeOptions.instantResolve = options.instantResolve;
-    }
-    if (typeof options.allowedStatusCodes !== "undefined") {
-      storeOptions.allowedStatusCodes = options.allowedStatusCodes;
-    }
-    var store = new Store(stores, storeOptions);
-  }
-  routeContext = routeContext || {};
+  const {
+    initialize: initializeCallback,
+    initStore = true,
+    initialUrl,
+    render,
+    routes,
+    storeId,
+    stores
+  } = options;
 
-  DOMReady.then(function() {
+  const clientEvents = extend({}, Events);
+  const store = initStore ? new Store(stores, createStoreOptions(options)) : null;
+
+  DOMReady.then(() => {
+
     if (initStore) {
-      var storeState = document.getElementById(storeId);
+      const storeState = document.getElementById(storeId);
       store.bootstrap( storeState.innerHTML );
       storeState.innerHTML = "";
     }
 
-    Object.keys(routes).forEach(function(route) {
-      page(route, function(ctx) {
-        var context;
-        var params = utils.extractParams(route, ctx.params);
+    // register page.js handler for each route
+    Object.keys(routes).forEach(route => {
+
+      page(route, ctx => {
+        const context = (typeof routeContext === "function")
+          ? routeContext.call({})
+          : routeContext;
+
+        // return array of params in proper order
+        const params = utils.extractParams(route, ctx.params);
+
         // add parsed query string object as last parameter for route handler
-        var query = qs.parse(ctx.querystring);
+        const query = qs.parse(ctx.querystring);
         params.push(query);
 
-        if (typeof routeContext === "function") {
-          context = routeContext.call({});
-        } else {
-          context = routeContext;
-        }
-
-        Promise.resolve(context).then(function(context) {
+        Promise.resolve(context).then(context => {
           if (initStore) {
             context.store = store;
           }
 
           // do not invoke route handler directly if it provides title & fetch
-          var routeHandler;
-          if (routes[route].title && routes[route].fetch) {
-            routeHandler = routes[route];
-          } else {
-            routeHandler = routes[route].apply(context, params);
-          }
+          // this is an optimization for React to keep routes pretty
+          const routeHandler = (routes[route].title && routes[route].fetch)
+            ? routes[route]
+            : routes[route].apply(context, params);
 
-          return Promise.resolve(routeHandler).then(function(options) {
+          return Promise.resolve(routeHandler).then(options => {
             return Promise.resolve(
               render.call(context, options, {params: ctx.params, query: query})
-            ).then(function(result) {
-              client.trigger("render", route);
+            ).then(result => {
+              clientEvents.trigger("render", route);
               return result;
             });
-          }).catch(function(error) {
+          }).catch(error => {
+            // log error as user hasn't handled it
             console.error("Render error while processing route "+ route +":", error);
           });
         });
@@ -91,9 +102,10 @@ function Client(options, routeContext) {
       });
     });
 
-    // init routes
-    page();
+    // initialize page.js route handling
+    page(initialUrl);
 
+    // invoke initialize callback if it was provided in options
     if (initializeCallback && typeof initializeCallback === "function") {
       initializeCallback.call(null, {
         router: page,
@@ -103,7 +115,7 @@ function Client(options, routeContext) {
 
   });
 
-  return this;
+  return clientEvents;
 };
 
-module.exports = Client;
+export default Client;

@@ -10,6 +10,9 @@
   describe('Client', function() {
 
     beforeEach(function() {
+
+      document.getElementById(storeId).innerHTML = '{"movies": {"/": [{"name": "Interstellar"}, {"name": "Inception"}, {"name": "Insomnia"}]}}';
+
       options = {
         appId: appId,
         storeId: storeId,
@@ -44,10 +47,6 @@
       };
     });
 
-    it('should initialize client with proper options', function() {
-      (function() { cerebellum.client(options) }).should.not.throw();
-    });
-
     it('should render index route handler\'s response to #app after initialization', function(done) {
       var clientEvents = cerebellum.client(options);
       clientEvents.on("render", function(route) {
@@ -59,10 +58,7 @@
     });
 
     it('should route to another url and render it\'s content', function(done) {
-      options.initialize = function(client) {
-        client.router.show("/second_route");
-      };
-
+      options.initialUrl = "/second_route";
       var clientEvents = cerebellum.client(options);
 
       clientEvents.on("render", function(route) {
@@ -75,10 +71,7 @@
     });
 
     it('should handle route parameters', function(done) {
-      options.initialize = function(client) {
-        client.router.show("/third_route/1/2");
-      };
-
+      options.initialUrl = "/third_route/1/2";
       var clientEvents = cerebellum.client(options);
 
       clientEvents.on("render", function(route) {
@@ -91,10 +84,7 @@
     });
 
     it('should render view without optional route param', function(done) {
-      options.initialize = function(client) {
-        client.router.show("/fourth");
-      };
-
+      options.initialUrl = "/fourth";
       var clientEvents = cerebellum.client(options);
 
       clientEvents.on("render", function(route) {
@@ -107,10 +97,7 @@
     });
 
     it('should render view with optional route param', function(done) {
-      options.initialize = function(client) {
-        client.router.show("/fourth/123");
-      };
-
+      options.initialUrl = "/fourth/123";
       var clientEvents = cerebellum.client(options);
 
       clientEvents.on("render", function(route) {
@@ -123,10 +110,7 @@
     });
 
     it('should bootstrap from initial JSON', function(done) {
-      options.initialize = function(client) {
-        client.router.show("/movies");
-      };
-
+      options.initialUrl = "/movies";
       var clientEvents = cerebellum.client(options);
 
       clientEvents.on("render", function(route) {
@@ -162,11 +146,8 @@
             return "async render";
           }
         },
-        stores: {}
-      };
-
-      asyncOptions.initialize = function(client) {
-        client.router.show("/async/1?q=hello");
+        stores: {},
+        initialUrl: "/async/1?q=hello"
       };
 
       var clientEvents = cerebellum.client(asyncOptions);
