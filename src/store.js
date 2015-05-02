@@ -363,11 +363,14 @@ class Store {
           this.markFetchOngoing(storeId, cacheKey, fetchPromise);
           return fetchPromise.then(() => {
             const result = this.cached.cursor([storeId, cacheKey]).update(previousStore => {
-              if (previousStore) {
-                return previousStore.merge(store.toJSON());
-              } else {
-                return Immutable.fromJS(store.toJSON());
-              }
+              // TODO: figure out to a way to use merge here, it's problematic
+              // with updates where List item is deleted
+              // if (previousStore) {
+              //   return previousStore.merge(store.toJSON());
+              // } else {
+              //   return Immutable.fromJS(store.toJSON());
+              // }
+              return Immutable.fromJS(store.toJSON());
             });
 
             if (instantResolve) {
