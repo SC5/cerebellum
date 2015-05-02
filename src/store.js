@@ -134,7 +134,7 @@ class Store {
     // optimistic update, save previous value for error scenario
     const previousModel = this.cached.cursor([storeId, cacheKey]).deref();
     if (previousModel) {
-      this.cached.cursor([storeId, cacheKey]).mergeDeep(attrs);
+      this.cached.cursor([storeId, cacheKey]).merge(attrs);
     }
 
     store.save(attrs, {
@@ -155,7 +155,7 @@ class Store {
         error.result = response;
         error.options = storeOptions;
         if (previousModel) {
-          this.cached.cursor([storeId, cacheKey]).mergeDeep(previousModel);
+          this.cached.cursor([storeId, cacheKey]).merge(previousModel);
         }
         this.trigger(`update:${storeId}`, error);
       }
@@ -364,7 +364,7 @@ class Store {
           return fetchPromise.then(() => {
             const result = this.cached.cursor([storeId, cacheKey]).update(previousStore => {
               if (previousStore) {
-                return previousStore.mergeDeep(store.toJSON());
+                return previousStore.merge(store.toJSON());
               } else {
                 return Immutable.fromJS(store.toJSON());
               }
