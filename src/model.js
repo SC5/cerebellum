@@ -1,3 +1,9 @@
-var ajax = require('vertebrae/adapters/axios');
-var Sync = require('vertebrae/sync')({ajax: ajax});
-module.exports = require('vertebrae/model')({sync: Sync});
+import ajax from 'vertebrae/adapters/axios';
+import Sync from 'vertebrae/sync';
+import Model from 'vertebrae/model';
+
+export default Model({
+  sync: Sync({
+    ajax: ajax
+  })
+});

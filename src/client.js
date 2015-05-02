@@ -95,7 +95,7 @@ function Client(options={}, routeContext={}) {
             });
           }).catch(error => {
             // log error as user hasn't handled it
-            console.error("Render error while processing route "+ route +":", error);
+            console.error(`Render error while processing route ${route}:, ${error}`);
           });
         });
 

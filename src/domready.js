@@ -1,6 +1,6 @@
-require('native-promise-only');
+import 'native-promise-only';
 
-module.exports = new Promise(function(resolve, reject) {
+export default new Promise((resolve, reject) => {
   if (document.readyState === 'complete') {
     resolve();
   } else {

@@ -1,4 +1,4 @@
-module.exports = function validateOptions(options) {
+export default function validateOptions(options) {
   if (!options.storeId || typeof options.storeId !== "string") {
     throw new Error("You must define storeId option, it's used for collections cache, e.g. 'store'");
   }
