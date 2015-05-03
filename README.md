@@ -264,7 +264,7 @@ Your routes will get picked by **client.js** and **server.js** and generate exac
 
 Your route handlers can return either promises or strings, cerebellum will handle both use cases.
 
-If you don't want your route handler to be automatically applied with context and parameters, your route handler function should include `title`and `fetch` properties (like React component's `statics`). This way you can define your component's title and data requirements inside the component and call **fetchAll** in your render. This will make your routes [much cleaner](https://github.com/hoppula/cereboard/blob/master/routes.js).
+If you don't want your route handler to be automatically applied with context and parameters, your route handler function should include `title`and `stores` properties (like React component's `statics`). This way you can define your component's title and data requirements inside the component and call **fetchAll** in your render. This will make your routes [much cleaner](https://github.com/hoppula/cereboard/blob/master/routes.js).
 
 In route handler's **this** scope you have **this.store** which is the reference to Store instance. It contains all your stores and **fetch** for getting the data.
 

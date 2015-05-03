@@ -80,9 +80,9 @@ function Client(options={}, routeContext={}) {
             context.store = store;
           }
 
-          // do not invoke route handler directly if it provides title & fetch
+          // don't invoke route handler directly if it provides title & stores as properties / functions
           // this is an optimization for React to keep routes pretty
-          const routeHandler = (routes[route].title && routes[route].fetch)
+          const routeHandler = (routes[route].title && routes[route].stores)
             ? routes[route]
             : routes[route].apply(context, params);
 
