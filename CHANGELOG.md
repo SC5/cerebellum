@@ -13,6 +13,8 @@
 - Store now tracks ongoing fetch requests to prevent multiple identical API calls
 - Collection & model are now exported as standalone modules
 - Server's fallback error handler now prints the stack trace
+- Now written in ES6, build with `npm run build` & watch changes with `npm run watch`
+- Fixed client side tests
 
 ## Version `0.6.0`
 
