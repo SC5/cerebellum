@@ -11,7 +11,7 @@ export default function validateOptions(options) {
     throw new Error("You must define routes option or your app won't respond to anything");
   }
 
-  if (!options.stores || typeof options.stores !== "object") {
+  if (options.initStore && (!options.stores || typeof options.stores !== "object")) {
     console.warn("You won't be able to use this.store in router without defining any stores");
   }
 };
