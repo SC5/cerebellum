@@ -1,5 +1,14 @@
 # Changelog
 
+## Version `0.8.0`
+
+### Breaking changes
+
+- Store's dispatch now returns promise, allows for easy error handling in view components
+- Store's `trigger` is now deprecated, use `dispatch` instead.
+
+### Other changes
+
 ## Version `0.7.0`
 
 ### Breaking changes

@@ -57,7 +57,7 @@ When you want to change things, you send a change event to central Store instanc
 
 ### Triggering changes with client side change events (green arrows)
 
-Views can trigger change events (`create`, `update`, `delete` or `expire`) with Store's `trigger` method (aliased as `dispatch`). Store delegates change event to corresponding store and invokes API request. When request is completed, Store triggers completion event (**create:storeId**, **update:storeName**, **delete:storeName** or **expire:storeName**).
+Views can trigger change events (`create`, `update`, `delete` or `expire`) with Store's `dispatch` method. Store delegates change event to corresponding store and invokes API request. When request is completed, Store triggers completion event (**create:storeId**, **update:storeName**, **delete:storeName** or **expire:storeName**).
 
 Client can listen for these events. In store event callbacks you can clear caches and re-render current route (or invoke another route handler). There's also an option to automatically clear caches for stores.
 
@@ -65,7 +65,10 @@ Client can listen for these events. In store event callbacks you can clear cache
 
 Let's say that reader wants to add a comment to a blog post. We want to persist that comment to server and re-render the blog post.
 
-1) When our avid reader clicks "Send comment" button, view triggers change event with `store.trigger("create", "comments", {id: this.props.id}, {name: "Hater", comment: "This example sucks!"})`
+1) When our avid reader clicks "Send comment" button, view triggers change event with 
+```javascript
+store.dispatch("create", "comments", {id: this.props.id}, {name: "Hater", comment: "This example sucks!"})
+```
 
 2) Store makes a API call `POST /api/posts/1/comments` to create a new comment with our data
 
@@ -146,7 +149,7 @@ var Post = Model.extend({
 ### Triggering changes
 
 Pass router's store instance to your view components and
-call `store.trigger` with **create**, **update**, **delete** or **expire**.
+call `store.dispatch` with **create**, **update**, **delete** or **expire**.
 
 For example, you would create a new post to "posts" collection by calling:
 

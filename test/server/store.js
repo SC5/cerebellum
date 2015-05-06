@@ -75,6 +75,7 @@ nock('http://cerebellum.local')
 
 nock('http://cerebellum.local')
 .post('/cars')
+.times(2)
 .reply(500, "Internal server error");
 
 nock('http://cerebellum.local')
@@ -379,7 +380,7 @@ describe('Store', function() {
           should.not.exist(store.cached.cursor().getIn(["car","Ferrari"]));
         });
         should.exist(store.cached.cursor().getIn(["car","Ferrari"]));
-        store.trigger("update", "car", {id: "Ferrari"}, {
+        store.dispatch("update", "car", {id: "Ferrari"}, {
           manufacturer: "Ferrari",
           model: "F40"
         });
@@ -396,7 +397,7 @@ describe('Store', function() {
           should.exist(store.staleCaches.car.Ferrari);
         });
         should.exist(store.cached.cursor().getIn(["car","Ferrari"]));
-        store.trigger("update", "car", {id: "Ferrari"}, {
+        store.dispatch("update", "car", {id: "Ferrari"}, {
           manufacturer: "Ferrari",
           model: "F40"
         });
@@ -429,7 +430,7 @@ describe('Store', function() {
       ]).then(function() {
         should.exist(store.cached.cursor().getIn(["car","Ferrari"]));
         store.cached.cursor().get("cars").should.not.be.empty;
-        store.trigger("update", "car", {id: "Ferrari"}, {model: "F40"});
+        store.dispatch("update", "car", {id: "Ferrari"}, {model: "F40"});
       });
     });
   });
@@ -463,7 +464,7 @@ describe('Store', function() {
         err.message.should.equal("You can call create only for collections!");
         done();
       });
-      store.trigger("create", "car", {manufacturer: "Mercedes-Benz"});
+      store.dispatch("create", "car", {manufacturer: "Mercedes-Benz"});
     });
 
     it('should trigger error when create fails', function(done) {
@@ -472,7 +473,14 @@ describe('Store', function() {
         err.message.should.equal("Creating new item to store 'cars' failed");
         done();
       });
-      store.trigger("create", "cars", {manufacturer: "Mercedes-Benz"});
+      store.dispatch("create", "cars", {manufacturer: "Mercedes-Benz"});
+    });
+
+    it('should reject dispatch return promise when create fails', function() {
+      var store = new Store(stores);
+      return store.dispatch("create", "cars", {manufacturer: "Mercedes-Benz"}).catch(function(err) {
+        err.message.should.equal("Creating new item to store 'cars' failed");
+      });
     });
 
     it('should trigger success with proper object when create succeeds', function(done) {
@@ -485,7 +493,7 @@ describe('Store', function() {
         data.result.get("manufacturer").should.equal("Bugatti");
         done();
       });
-      store.trigger("create", "cars", {manufacturer: "Bugatti"});
+      store.dispatch("create", "cars", {manufacturer: "Bugatti"});
     });
   });
 
@@ -495,7 +503,7 @@ describe('Store', function() {
       store.on("update:collection", function(err, data) {
         err.message.should.equal("You can call update only for models!");
       });
-      store.trigger("update", "collection", {title: "Updated collection"});
+      store.dispatch("update", "collection", {title: "Updated collection"});
     });
 
     it('should trigger error when update fails', function(done) {
@@ -504,7 +512,14 @@ describe('Store', function() {
         err.message.should.equal("Updating 'car' failed");
         done();
       });
-      store.trigger("update", "car", {id: "Lotus"}, {manufacturer: "Lotus", model: "Exige"});
+      store.dispatch("update", "car", {id: "Lotus"}, {manufacturer: "Lotus", model: "Exige"});
+    });
+
+    it('should reject dispatch return promise when update fails', function() {
+      var store = new Store(stores);
+      return store.dispatch("update", "car", {id: "Lotus"}, {manufacturer: "Lotus", model: "Exige"}).catch(function(err) {
+        err.message.should.equal("Updating 'car' failed");
+      });
     });
 
     it('should trigger success with proper object when update succeeds', function() {
@@ -518,7 +533,7 @@ describe('Store', function() {
         data.result.get("model").should.equal("Zonda");
         done();
       });
-      store.trigger("update", "car", {id: "Pagani"}, {manufacturer: "Pagani", model: "Zonda"});
+      store.dispatch("update", "car", {id: "Pagani"}, {manufacturer: "Pagani", model: "Zonda"});
     });
   });
 
@@ -528,16 +543,28 @@ describe('Store', function() {
       store.on("delete:collection", function(err, data) {
         err.message.should.equal("You can call destroy only for models!");
       });
-      store.trigger("delete", "collection");
+      store.dispatch("delete", "collection");
     });
 
     it('should trigger error when delete fails', function(done) {
       var store = new Store(stores);
       store.on("delete:car", function(err, data) {
-        err.message.should.equal("Deleting 'car' failed");
-        done();
+        try {
+          err.should.be.instanceOf(Error);
+          err.message.should.equal("Deleting 'car' failed");
+          done();
+        } catch (error) {
+          done(error);
+        }
       });
-      store.trigger("delete", "car", {id: "Lotus"});
+      store.dispatch("delete", "car", {id: "Lotus"});
+    });
+
+    it('should reject dispatch return promise when delete fails', function() {
+      var store = new Store(stores);
+      return store.dispatch("delete", "car", {id: "Lotus"}).catch(function(err) {
+        err.message.should.equal("Deleting 'car' failed");
+      });
     });
 
     it('should trigger success with proper object when delete succeeds', function(done) {
@@ -549,7 +576,7 @@ describe('Store', function() {
         data.options.should.eql({id: "Maserati"});
         done();
       });
-      store.trigger("delete", "car", {id: "Maserati"});
+      store.dispatch("delete", "car", {id: "Maserati"});
     });
 
   });
@@ -566,7 +593,7 @@ describe('Store', function() {
       });
       return store.fetch("car", {id: "Ferrari"}).then(function(result) {
         store.cached.cursor().getIn(["car","Ferrari"]).get("manufacturer").should.be.equal("Ferrari");
-        store.trigger("expire", "car", {id: "Ferrari"});
+        store.dispatch("expire", "car", {id: "Ferrari"});
       });
     });
   });

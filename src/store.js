@@ -59,156 +59,164 @@ class Store {
 
     // allows Store to be used as event bus
     extend(this, Events);
+  }
 
-    // alias 'trigger' as 'dispatch'
-    this.dispatch = this.trigger;
+  dispatch(action, storeId, storeOptions, attrs) {
+    return this[action].call(this, storeId, storeOptions, attrs);
+  }
 
-    // callbacks expect: storeId, storeOptions, params
-    this.on({
-      "create": this.onCreate,
-      "update": this.onUpdate,
-      "delete": this.onDelete,
-      "expire": this.onExpire
+  create(storeId, storeOptions, attrs) {
+    return new Promise((resolve, reject) => {
+      if (!attrs) {
+        attrs = storeOptions;
+        storeOptions = {};
+      }
+
+      const store = this.get(storeId);
+      store.storeOptions = extend({}, storeOptions);
+      const cacheKey = createCacheKey(store);
+
+      if (typeof store.create !== "function") {
+        this.trigger(`create:${storeId}`, new Error("You can call create only for collections!"));
+        return;
+      }
+
+      // optimistic create, save previous value for error scenario
+      const previousCollection = this.cached.cursor([storeId, cacheKey]).deref();
+      this.cached.cursor([storeId, cacheKey]).update(collection => {
+        const newItem = Immutable.fromJS(attrs);
+        if (collection) {
+          return collection.push(newItem);
+        } else {
+          return new Immutable.List([newItem]);
+        }
+      });
+
+      store.create(attrs, {
+        success: (model, response) => {
+          if (this.autoClearCaches) {
+            this.clearCache(storeId, store.storeOptions);
+          }
+          this.trigger(`create:${storeId}`, null, {
+            cacheKey: cacheKey,
+            store: storeId,
+            options: storeOptions,
+            result: model
+          });
+          resolve(model);
+        },
+        error: (model, response) => {
+          const error = new Error(`Creating new item to store '${storeId}' failed`);
+          error.store = storeId;
+          error.result = response;
+          error.options = storeOptions;
+          this.cached.cursor([storeId, cacheKey]).update(() => previousCollection);
+          this.trigger(`create:${storeId}`, error);
+          reject(error);
+        }
+      });
     });
   }
 
-  onCreate(storeId, storeOptions, attrs) {
-    if (!attrs) {
-      attrs = storeOptions;
-      storeOptions = {};
-    }
+  update(storeId, storeOptions, attrs) {
+    return new Promise((resolve, reject) => {
+      const store = this.get(storeId);
+      store.storeOptions = extend({}, storeOptions);
+      const cacheKey = createCacheKey(store);
 
-    const store = this.get(storeId);
-    store.storeOptions = extend({}, storeOptions);
-    const cacheKey = createCacheKey(store);
-
-    if (typeof store.create !== "function") {
-      this.trigger(`create:${storeId}`, new Error("You can call create only for collections!"));
-      return;
-    }
-
-    // optimistic create, save previous value for error scenario
-    const previousCollection = this.cached.cursor([storeId, cacheKey]).deref();
-    this.cached.cursor([storeId, cacheKey]).update(collection => {
-      const newItem = Immutable.Map(attrs);
-      if (collection) {
-        return collection.push(newItem);
-      } else {
-        return new Immutable.List([newItem]);
+      if (typeof store.save !== "function") {
+        this.trigger(`update:${storeId}`, new Error("You can call update only for models!"));
+        return;
       }
-    });
 
-    store.create(attrs, {
-      success: (model, response) => {
-        if (this.autoClearCaches) {
-          this.clearCache(storeId, store.storeOptions);
+      // optimistic update, save previous value for error scenario
+      const previousModel = this.cached.cursor([storeId, cacheKey]).deref();
+      if (previousModel) {
+        this.cached.cursor([storeId, cacheKey]).merge(attrs);
+      }
+
+      store.save(attrs, {
+        success: (model, response) => {
+          if (this.autoClearCaches) {
+            this.clearCache(storeId, store.storeOptions);
+          }
+          this.trigger(`update:${storeId}`, null, {
+            cacheKey: createCacheKey(store),
+            store: storeId,
+            options: storeOptions,
+            result: model
+          });
+          resolve(model);
+        },
+        error: (model, response) => {
+          const error = new Error(`Updating '${storeId}' failed`);
+          error.store = storeId;
+          error.result = response;
+          error.options = storeOptions;
+          if (previousModel) {
+            this.cached.cursor([storeId, cacheKey]).merge(previousModel);
+          }
+          this.trigger(`update:${storeId}`, error);
+          reject(error);
         }
-        this.trigger(`create:${storeId}`, null, {
-          cacheKey: cacheKey,
-          store: storeId,
-          options: storeOptions,
-          result: model
-        });
-      },
-      error: (model, response) => {
-        const error = new Error(`Creating new item to store '${storeId}' failed`);
-        error.store = storeId;
-        error.result = response;
-        error.options = storeOptions;
-        this.cached.cursor([storeId, cacheKey]).update(() => previousCollection);
-        this.trigger(`create:${storeId}`, error);
-      }
+      });
     });
   }
 
-  onUpdate(storeId, storeOptions, attrs) {
-    const store = this.get(storeId);
-    store.storeOptions = extend({}, storeOptions);
-    const cacheKey = createCacheKey(store);
+  delete(storeId, storeOptions) {
+    return new Promise((resolve, reject) => {
+      const store = this.get(storeId);
+      store.storeOptions = extend({}, storeOptions);
+      // Model#destroy needs id attribute or it considers model new and triggers success callback straight away
+      store.set("id", store.storeOptions.id);
+      const cacheKey = createCacheKey(store);
 
-    if (typeof store.save !== "function") {
-      this.trigger(`update:${storeId}`, new Error("You can call update only for models!"));
-      return;
-    }
-
-    // optimistic update, save previous value for error scenario
-    const previousModel = this.cached.cursor([storeId, cacheKey]).deref();
-    if (previousModel) {
-      this.cached.cursor([storeId, cacheKey]).merge(attrs);
-    }
-
-    store.save(attrs, {
-      success: (model, response) => {
-        if (this.autoClearCaches) {
-          this.clearCache(storeId, store.storeOptions);
-        }
-        this.trigger(`update:${storeId}`, null, {
-          cacheKey: createCacheKey(store),
-          store: storeId,
-          options: storeOptions,
-          result: model
-        });
-      },
-      error: (model, response) => {
-        const error = new Error(`Updating '${storeId}' failed`);
-        error.store = storeId;
-        error.result = response;
-        error.options = storeOptions;
-        if (previousModel) {
-          this.cached.cursor([storeId, cacheKey]).merge(previousModel);
-        }
-        this.trigger(`update:${storeId}`, error);
+      if (typeof store.destroy !== "function") {
+        this.trigger(`delete:${storeId}`, new Error("You can call destroy only for models!"));
+        return;
       }
+
+      // optimistic delete, save previous value for error scenario
+      const previousModel = this.cached.cursor([storeId, cacheKey]).deref();
+      this.cached.cursor(storeId).delete(cacheKey);
+
+      store.destroy({
+        success: (model, response) => {
+          if (this.autoClearCaches) {
+            this.clearCache(storeId, store.storeOptions);
+          }
+          this.trigger(`delete:${storeId}`, null, {
+            cacheKey: createCacheKey(store),
+            store: storeId,
+            options: storeOptions,
+            result: model
+          });
+          resolve(model);
+        },
+        error: (model, response) => {
+          const error = new Error(`Deleting '${storeId}' failed`);
+          error.store = storeId;
+          error.result = response;
+          error.options = storeOptions;
+          this.cached.cursor(storeId).set(cacheKey, previousModel);
+          this.trigger(`delete:${storeId}`, error);
+          reject(error);
+        }
+      });
     });
   }
 
-  onDelete(storeId, storeOptions) {
-    const store = this.get(storeId);
-    store.storeOptions = extend({}, storeOptions);
-    // Model#destroy needs id attribute or it considers model new and triggers success callback straight away
-    store.set("id", store.storeOptions.id);
-    const cacheKey = createCacheKey(store);
-
-    if (typeof store.destroy !== "function") {
-      this.trigger(`delete:${storeId}`, new Error("You can call destroy only for models!"));
-      return;
-    }
-
-    // optimistic delete, save previous value for error scenario
-    const previousModel = this.cached.cursor([storeId, cacheKey]).deref();
-    this.cached.cursor(storeId).delete(cacheKey);
-
-    store.destroy({
-      success: (model, response) => {
-        if (this.autoClearCaches) {
-          this.clearCache(storeId, store.storeOptions);
-        }
-        this.trigger(`delete:${storeId}`, null, {
-          cacheKey: createCacheKey(store),
-          store: storeId,
-          options: storeOptions,
-          result: model
-        });
-      },
-      error: (model, response) => {
-        const error = new Error(`Deleting '${storeId}' failed`);
-        error.store = storeId;
-        error.result = response;
-        error.options = storeOptions;
-        this.cached.cursor(storeId).set(cacheKey, previousModel);
-        this.trigger(`delete:${storeId}`, error);
-      }
-    });
-  }
-
-  onExpire(storeId, storeOptions) {
-    const store = this.get(storeId);
-    store.storeOptions = extend({}, storeOptions);
-    this.clearCache(storeId, store.storeOptions);
-    this.trigger(`expire:${storeId}`, null, {
-      cacheKey: createCacheKey(store),
-      store: storeId,
-      options: storeOptions
+  expire(storeId, storeOptions) {
+    return new Promise((resolve, reject) => {
+      const store = this.get(storeId);
+      store.storeOptions = extend({}, storeOptions);
+      this.clearCache(storeId, store.storeOptions);
+      this.trigger(`expire:${storeId}`, null, {
+        cacheKey: createCacheKey(store),
+        store: storeId,
+        options: storeOptions
+      });
+      return resolve(storeId);
     });
   }
 
