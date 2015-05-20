@@ -8,6 +8,8 @@ Cerebellum is designed for single-page apps that need search engine visibility. 
 
 [Introductory blog post, published on February 5, 2015.](http://sc5.io/posts/cerebellum-js-uncomplicated-isomorphic-javascript-apps)
 
+[Cerebellum React helpers](https://github.com/hoppula/cerebellum-react)
+
 ### What does it do?
 
 * Fully shared GET routes between server and client
