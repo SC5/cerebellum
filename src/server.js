@@ -1,10 +1,9 @@
 import 'native-promise-only';
 import cheerio from 'cheerio';
 import express from 'express';
-import fs from 'fs';
-import path from 'path';
 import Store from './store';
 import utils from './utils';
+import serverUtils from './server-utils';
 import validateOptions from './validate-options';
 
 function Server(options={}, routeContext={}) {
@@ -12,6 +11,10 @@ function Server(options={}, routeContext={}) {
 
   const {
     app: appSettings = [],
+    entries = {
+      path: null,
+      routes: {}
+    },
     middleware = [],
     render,
     routes,
@@ -27,18 +30,14 @@ function Server(options={}, routeContext={}) {
     throw new Error("You must define staticFiles path for index.html");
   }
 
+  // preload all entry files on startup
+  const entryFiles = serverUtils.loadEntries(entries, staticFiles);
   const app = express();
 
   // useful for delaying the static middleware injection
   app.useStatic = () => {
     app.use( express.static(staticFiles) );
   };
-
-  const indexHTML = cheerio.load(
-    fs.readFileSync(path.join(staticFiles, "index.html"), {
-      encoding: "UTF-8"
-    })
-  ).html();
 
   appSettings.forEach(key => {
     app.set(key, appSettings[key]);
@@ -86,7 +85,7 @@ function Server(options={}, routeContext={}) {
           : routes[route].apply(context, params);
 
         return Promise.resolve(routeHandler).then(options => {
-          const document = cheerio.load(indexHTML);
+          const document = cheerio.load(serverUtils.entryHTML(entryFiles, req));
 
           // store state snapshot to HTML document
           if (context.store) {

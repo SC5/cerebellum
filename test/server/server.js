@@ -1,5 +1,6 @@
 var should = require('should');
 var cheerio = require('cheerio');
+require("babel/polyfill");
 require('native-promise-only');
 
 var Server = require('../../server');
