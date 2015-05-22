@@ -9,6 +9,8 @@
 
 ### Other changes
 
+- You can now define entry .html files per route pattern, e.g. /admin can use admin.html
+
 ## Version `0.7.0`
 
 ### Breaking changes
