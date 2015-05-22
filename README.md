@@ -67,7 +67,7 @@ Client can listen for these events. In store event callbacks you can clear cache
 
 Let's say that reader wants to add a comment to a blog post. We want to persist that comment to server and re-render the blog post.
 
-1) When our avid reader clicks "Send comment" button, view triggers change event with 
+1) When our avid reader clicks "Send comment" button, view triggers change event with
 ```javascript
 store.dispatch("create", "comments", {id: this.props.id}, {name: "Hater", comment: "This example sucks!"})
 ```
@@ -199,7 +199,8 @@ cerebellum.client(options);
 
 ## Options
 
-You can define all options in both server.js & client.js, but it usually makes sense to create a shared `options.js` for shared options.
+Options below are processed by both server.js & client.js, it usually makes sense to create a shared `options.js` for these shared options.
+Server and Client specific options are documented in their respective sections in documentation.
 
 ### Options (options.js)
 
@@ -213,9 +214,7 @@ module.exports = {
   routes: routes,
   storeId: "store_state_from_server",
   stores: stores,
-  autoClearCaches: true,
-  initStore: true,
-  instantResolve: false
+  initStore: true
 };
 ```
 
@@ -231,17 +230,10 @@ DOM ID in index.html where server stores the JSON snapshot that client will use 
 
 Object containining store ids and stores. Best practice is to put these to their own file as well, see **"Stores (stores.js)"** documentation below.
 
-#### autoClearCaches
-
-Automatically clear the client Store cache for affected collection or model. Defaults to true. If this is not enabled you need to explicitly clear the caches in event handlers.
-
 #### initStore
 
 Initialize store for route handlers (**this.store**). Defaults to true. Disable if you want to perform the data retrieval elsewhere. For example, when using framework like [Omniscient](https://github.com/omniscientjs/omniscient) you would perform the data fetching in server.js & client.js and pass cursor to immutable data structure in routeContext.
 
-#### instantResolve
-
-With instantResolve you can make the **fetch** promises to resolve immediately with empty data. When **fetch** calls actually finish, they will fire **fetch:storeId** events that you can use to re-render the routes. This is really useful when you want to render the view skeleton immediately and show some loading spinners while the data retrieval is ongoing. instantResolve will only affect client side **fetch** calls, it has no effect on server side.
 
 ### Routes (routes.js)
 
@@ -347,6 +339,21 @@ options.middleware = [
 ];
 ```
 
+#### options.entries
+
+You can define entry files per route pattern, e.g. you want to include different .js bundle & .css in admin section.
+If entries option is not defined, server will default to `path.join(options.staticFiles, "index.html")`.
+If routes object is empty or any route pattern does not match, server will default to `path.join(options.entries.path, "index.html")`.
+
+```javascript
+options.entries = {
+  path: "assets/entries",
+  routes: {
+    "/admin": "admin.html"
+  }
+};
+```
+
 #### useStatic
 
 Instance method for cerebellum.server instance. Registers express.js static file handling, you usually want to call this after executing cerebellum.server constructor, so Cerebellum routes take precedence over static files.
@@ -398,10 +405,18 @@ options.initialize = function(client) {
 
 #### options.autoClearCaches
 
-With this option Store will automatically clear cache for matching cacheKey after **create**, **update** or **delete**. Defaults to false.
+With this option Store will automatically clear cache for matching cacheKey after **create**, **update** or **delete**. Defaults to true.
 
 ```javascript
 options.autoClearCaches = true;
+```
+
+#### options.instantResolve
+
+With instantResolve you can make the **fetch** promises to resolve immediately with empty data. When **fetch** calls actually finish, they will fire **fetch:storeId** events that you can use to re-render the routes. This is really useful when you want to render the view skeleton immediately and show some loading spinners while the data retrieval is ongoing. instantResolve will only affect client side **fetch** calls, it has no effect on server side.
+
+```javascript
+options.instantResolve = true;
 ```
 
 ## Models & Collections
