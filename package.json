@@ -1,6 +1,6 @@
 {
   "name": "cerebellum",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "Controls your isomorphic apps",
   "scripts": {
     "build": "babel src --out-dir lib --stage 1",
