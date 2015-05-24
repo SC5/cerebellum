@@ -234,6 +234,10 @@ Object containining store ids and stores. Best practice is to put these to their
 
 Initialize store for route handlers (**this.store**). Defaults to true. Disable if you want to perform the data retrieval elsewhere. For example, when using framework like [Omniscient](https://github.com/omniscientjs/omniscient) you would perform the data fetching in server.js & client.js and pass cursor to immutable data structure in routeContext.
 
+#### routeHandler
+
+Method that decides how route handlers are being called. Default behaviour is that route handler gets applied with route params. With React, you can use `cerebellum-react/route-handler`.
+
 
 ### Routes (routes.js)
 
@@ -260,8 +264,6 @@ module.exports = {
 Your routes will get picked by **client.js** and **server.js** and generate exactly same response in both environments (provided you implement your **render** functions in that manner).
 
 Your route handlers can return either promises or strings, cerebellum will handle both use cases.
-
-If you don't want your route handler to be automatically applied with context and parameters, your route handler function should include `title`and `stores` properties (like React component's `statics`). This way you can define your component's title and data requirements inside the component and call **fetchAll** in your render. This will make your routes [much cleaner](https://github.com/hoppula/cereboard/blob/master/routes.js).
 
 In route handler's **this** scope you have **this.store** which is the reference to Store instance. It contains all your stores and **fetch** for getting the data.
 

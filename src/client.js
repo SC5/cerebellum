@@ -9,6 +9,10 @@ import utils from './utils';
 import validateOptions from './validate-options';
 import {extend} from 'vertebrae/utils';
 
+function defaultRouteHandler(handler, params) {
+  return handler.apply(this, params);
+}
+
 function createStoreOptions(options={}) {
   const storeOptions = {};
 
@@ -45,6 +49,7 @@ function Client(options={}, routeContext={}) {
     initialUrl,
     render,
     routes,
+    routeHandler = defaultRouteHandler,
     storeId,
     stores
   } = options;
@@ -80,13 +85,9 @@ function Client(options={}, routeContext={}) {
             context.store = store;
           }
 
-          // don't invoke route handler directly if it provides title & stores as properties / functions
-          // this is an optimization for React to keep routes pretty
-          const routeHandler = (routes[route].title && routes[route].stores)
-            ? routes[route]
-            : routes[route].apply(context, params);
-
-          return Promise.resolve(routeHandler).then(options => {
+          return Promise.resolve(
+            routeHandler.call(context, routes[route], params)
+          ).then(options => {
             return Promise.resolve(
               render.call(context, options, {params: ctx.params, query: query})
             ).then(result => {

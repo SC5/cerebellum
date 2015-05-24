@@ -6,6 +6,10 @@ import utils from './utils';
 import serverUtils from './server-utils';
 import validateOptions from './validate-options';
 
+function defaultRouteHandler(handler, params) {
+  return handler.apply(this, params);
+}
+
 function Server(options={}, routeContext={}) {
   validateOptions(options);
 
@@ -18,6 +22,7 @@ function Server(options={}, routeContext={}) {
     middleware = [],
     render,
     routes,
+    routeHandler = defaultRouteHandler,
     staticFiles,
     storeId,
     stores,
@@ -78,13 +83,9 @@ function Server(options={}, routeContext={}) {
           context.store = new Store(stores, options);
         }
 
-        // don't invoke route handler directly if it provides title & stores as properties / functions
-        // this is an optimization for React to keep routes pretty
-        const routeHandler = (routes[route].title && routes[route].stores)
-          ? routes[route]
-          : routes[route].apply(context, params);
-
-        return Promise.resolve(routeHandler).then(options => {
+        return Promise.resolve(
+          routeHandler.call(context, routes[route], params)
+        ).then(options => {
           const document = cheerio.load(serverUtils.entryHTML(entryFiles, req));
 
           // store state snapshot to HTML document
