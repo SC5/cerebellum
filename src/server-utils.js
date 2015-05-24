@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import cheerio from 'cheerio';
 import pathToRegexp from 'path-to-regexp';
-import 'babel/polyfill';
+import 'array.prototype.find';
 
 function loadHTML(path) {
   return cheerio.load(fs.readFileSync(path, {encoding: "UTF-8"})).html();
