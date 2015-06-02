@@ -344,7 +344,9 @@ describe('Store', function() {
       var store = new Store(stores);
       var expectedJSON = JSON.stringify({
         model: {},
-        collection: {},
+        collection: {
+          "collection/1": []
+        },
         car: {
           "Ferrari": {manufacturer: "Ferrari"},
           "Lotus": {manufacturer: "Lotus"}

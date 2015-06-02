@@ -367,8 +367,29 @@ class Store {
             }
           });
         } else {
-          const fetchPromise = store.fetch(fetchOptions);
+          const fetchPromise = store.fetch(fetchOptions).catch(err => {
+            const allowedStatus = this.allowedStatusCodes.some(statusCode => {
+              return statusCode === err.status;
+            });
+            if (allowedStatus) {
+              const result = Cursor.from(Immutable.fromJS(store.toJSON()));
+              if (instantResolve) {
+                return this.trigger(`fetch:${storeId}`, null, result);
+              } else {
+                return resolve(result);
+              }
+            } else {
+              // reject for other statuses so error can be catched in router
+              if (instantResolve) {
+                return this.trigger(`fetch:${storeId}`, err);
+              } else {
+                return reject(err);
+              }
+            }
+          });
+
           this.markFetchOngoing(storeId, cacheKey, fetchPromise);
+
           return fetchPromise.then(() => {
             const result = this.cached.cursor([storeId, cacheKey]).update(previousStore => {
               // TODO: figure out to a way to use merge here, it's problematic
@@ -393,25 +414,6 @@ class Store {
             setTimeout(() => {
               this.markFetchCompleted(storeId, cacheKey);
             }, 50);
-          }).catch(err => {
-            const allowedStatus = this.allowedStatusCodes.some(statusCode => {
-              return statusCode === err.status;
-            });
-            if (allowedStatus) {
-              const result = Cursor.from(Immutable.fromJS(store.toJSON()));
-              if (instantResolve) {
-                return this.trigger(`fetch:${storeId}`, null, result);
-              } else {
-                return resolve(result);
-              }
-            } else {
-              // reject for other statuses so error can be catched in router
-              if (instantResolve) {
-                return this.trigger(`fetch:${storeId}`, err);
-              } else {
-                return reject(err);
-              }
-            }
           });
         }
 
