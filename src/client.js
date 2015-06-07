@@ -89,7 +89,7 @@ function Client(options={}, routeContext={}) {
             routeHandler.call(context, routes[route], params)
           ).then(options => {
             return Promise.resolve(
-              render.call(context, options, {params: ctx.params, query: query})
+              render.call(context, document, options, {params: ctx.params, query: query})
             ).then(result => {
               clientEvents.trigger("render", route);
               return result;
