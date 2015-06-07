@@ -17,7 +17,7 @@
         appId: appId,
         storeId: storeId,
         initialize: function(client) {},
-        render: function(options) {
+        render: function(document, options) {
           appContainer.innerHTML = options.value;
         },
         routes: {
@@ -128,7 +128,7 @@
         appId: appId,
         storeId: storeId,
         initialize: function(client) {},
-        render: function(response, request) {
+        render: function(document, response, request) {
           var context = this;
           return new Promise(function(resolve, reject) {
             setTimeout(function() {
