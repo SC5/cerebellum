@@ -1,5 +1,12 @@
 # Changelog
 
+## Version `0.9.0`
+
+### Breaking changes
+
+- Client's render now has a matching signature to server's render, they both
+call the given render method with document, options & params/query.
+
 ## Version `0.8.0`
 
 ### Breaking changes
