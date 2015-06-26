@@ -1,7 +1,8 @@
 import 'native-promise-only';
 import cheerio from 'cheerio';
 import express from 'express';
-import Store from './store';
+import API from './api';
+import {createState, createStore} from './store';
 import utils from './utils';
 import serverUtils from './server-utils';
 import validateOptions from './validate-options';
@@ -14,7 +15,9 @@ function Server(options={}, routeContext={}) {
   validateOptions(options);
 
   const {
+    actions = {},
     app: appSettings = [],
+    initialState = {},
     entries = {
       path: null,
       routes: {}
@@ -25,10 +28,9 @@ function Server(options={}, routeContext={}) {
     routeHandler = defaultRouteHandler,
     staticFiles,
     storeId,
-    stores,
-    autoToJSON = true,
+    stores = {},
     initStore = true,
-    allowedStatusCodes = null
+    allowedStatusCodes = [401, 403]
   } = options;
 
   if (!staticFiles || typeof staticFiles !== "string") {
@@ -69,32 +71,38 @@ function Server(options={}, routeContext={}) {
       // add parsed query string object as last parameter for route handler
       params.push(req.query);
 
-      Promise.resolve(context).then(context => {
+      Promise.resolve(context).then(renderContext => {
         if (initStore) {
-          const options = {
-            autoToJSON: autoToJSON,
-            allowedStatusCodes: allowedStatusCodes
+          const apiConfig = {
+            allowedStatuses: allowedStatusCodes,
+            stores: stores
           };
 
           if (req.headers.cookie) {
-            options.cookie = req.headers.cookie;
+            apiConfig.headers = {'Cookie': req.headers.cookie};
           }
 
-          context.store = new Store(stores, options);
+          renderContext.store = createStore(
+            createState(initialState),
+            actions
+          );
+          renderContext.api = API(renderContext.store, apiConfig);
         }
 
         return Promise.resolve(
-          routeHandler.call(context, routes[route], params)
-        ).then(options => {
+          routeHandler.call(renderContext, routes[route], params)
+        ).then(routeOptions => {
           const document = cheerio.load(serverUtils.entryHTML(entryFiles, req));
 
           // store state snapshot to HTML document
-          if (context.store) {
-            document(`#${storeId}`).text(context.store.snapshot());
+          if (renderContext.store) {
+            document(`#${storeId}`).text(
+              renderContext.store.snapshot()
+            );
           }
 
           return Promise.resolve(
-            render.call(context, document, options, {
+            render.call(renderContext, document, routeOptions, {
               params: req.params,
               query: req.query
             })
@@ -111,12 +119,14 @@ function Server(options={}, routeContext={}) {
             return res.send(`Error: ${error.stack}`);
           }
         });
+      }).catch(routeErr => {
+        return res.send(`Error: ${routeErr.stack}`);
       });
 
     });
   });
 
   return app;
-};
+}
 
 export default Server;
