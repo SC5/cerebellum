@@ -2,7 +2,7 @@ import 'native-promise-only';
 import cheerio from 'cheerio';
 import express from 'express';
 import API from './api';
-import {createState, createStore} from './store';
+import {createStore} from './store';
 import utils from './utils';
 import serverUtils from './server-utils';
 import validateOptions from './validate-options';
@@ -11,13 +11,12 @@ function defaultRouteHandler(handler, params) {
   return handler.apply(this, params);
 }
 
-function Server(options={}, routeContext={}) {
+function Server(state, options={}, routeContext={}) {
   validateOptions(options);
 
   const {
     actions = {},
     app: appSettings = [],
-    initialState = {},
     entries = {
       path: null,
       routes: {}
@@ -83,7 +82,7 @@ function Server(options={}, routeContext={}) {
           }
 
           renderContext.store = createStore(
-            createState(initialState),
+            state,
             actions
           );
           renderContext.api = API(renderContext.store, apiConfig);

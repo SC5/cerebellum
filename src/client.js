@@ -5,7 +5,7 @@ import Events from 'vertebrae/events';
 import page from 'page';
 import qs from 'qs';
 import API from './api';
-import {createState, createStore} from './store';
+import {createStore} from './store';
 import utils from './utils';
 import validateOptions from './validate-options';
 
@@ -25,7 +25,7 @@ function createAPIConfig(options={}) {
   return apiConfig;
 }
 
-function Client(options={}, routeContext={}) {
+function Client(state, options={}, routeContext={}) {
   validateOptions(options);
 
   // ensure proper initial state for page.js
@@ -36,7 +36,6 @@ function Client(options={}, routeContext={}) {
   const {
     actions = {},
     initialize: initializeCallback,
-    initialState = {},
     initStore = true,
     initialUrl,
     render,
@@ -52,7 +51,7 @@ function Client(options={}, routeContext={}) {
 
   if (initStore) {
     store = createStore(
-      createState(initialState),
+      state,
       actions
     );
     api = API(store, createAPIConfig(options));
