@@ -48,6 +48,8 @@ function Client(state, options={}, routeContext={}) {
   const clientEvents = {...Events};
   let store = null;
   let api = null;
+  // TODO: use purerendermixin, check if lastProps !== nextProps
+  // let lastProps = {routeComponent: null, request: null};
 
   if (initStore) {
     store = createStore(
@@ -55,6 +57,14 @@ function Client(state, options={}, routeContext={}) {
       actions
     );
     api = API(store, createAPIConfig(options));
+
+    setTimeout(function() {
+      state.forceHasSwapped();
+    }, 0);
+
+    // state.on("swap", (newState, oldState, path) => {
+    //   clientEvents.trigger("swap", newState, oldState, path);
+    // });
   }
 
   DOMReady.then(() => {

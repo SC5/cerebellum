@@ -226,7 +226,8 @@ function createFetch(store, userConfig={}) {
       } else {
         result = Promise.resolve(currentState);
       }
-      return resolve(result).catch(reject);
+
+      return resolve(result);
     });
   }
 

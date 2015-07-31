@@ -84,6 +84,7 @@ export function createStore(state, actions={}) {
       return state.cursor().get("log");
     },
 
+    // TODO: optimize
     events(storeId) {
       return state.cursor(["events"]).toArray().filter(event => {
         return event.storeId === storeId;
