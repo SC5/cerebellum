@@ -85,14 +85,18 @@ export function createStore(state, actions={}) {
     },
 
     // TODO: optimize
-    events(storeId) {
-      return state.cursor(["events"]).toArray().filter(event => {
-        return event.storeId === storeId;
-      });
+    events(filter=()=>true) {
+      return state.cursor(["events"]).filter(filter).toArray();
     },
 
     logEvent(storeId, title, ...args) {
       return logEvent(state.cursor(["events"]), storeId, title, ...args);
+    },
+
+    observeEvents(callback) {
+      return state.reference(["events"]).observe((newState) => {
+        return callback(newState.get("events").last());
+      });
     },
 
     observe(storeId, callback) {
