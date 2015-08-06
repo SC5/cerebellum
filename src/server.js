@@ -2,7 +2,7 @@ import 'native-promise-only';
 import cheerio from 'cheerio';
 import express from 'express';
 import API from './api';
-import {createStore} from './store';
+import {createState, createStore} from './store';
 import utils from './utils';
 import serverUtils from './server-utils';
 import validateOptions from './validate-options';
@@ -82,7 +82,7 @@ function Server(state, options={}, routeContext={}) {
           }
 
           renderContext.store = createStore(
-            state,
+            createState(state),
             actions
           );
           renderContext.api = API(renderContext.store, apiConfig);
