@@ -76,16 +76,17 @@ function Server(state, options={}, routeContext={}) {
             allowedStatuses: allowedStatusCodes,
             stores: stores
           };
+          const stateStruct = createState(state);
 
           if (req.headers.cookie) {
             apiConfig.headers = {'Cookie': req.headers.cookie};
           }
 
           renderContext.store = createStore(
-            createState(state),
+            stateStruct,
             actions
           );
-          renderContext.api = API(renderContext.store, apiConfig);
+          renderContext.api = API(renderContext.store, stateStruct, apiConfig);
         }
 
         return Promise.resolve(

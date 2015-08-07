@@ -47,6 +47,23 @@ function logEvent(eventsLog, storeId, title, ...args) {
   });
 }
 
+export function createActions(state, actions={}) {
+  return Object.keys(actions).reduce((actionFns, storeId) => {
+    actionFns[storeId] = Object.keys(actions[storeId]).reduce((storeActions, action) => {
+      storeActions[action] = (...args) => {
+        actions[storeId][action].call(
+          null,
+          state.cursor(["stores", storeId]),
+          ...args
+        );
+        logAction(state.cursor(["log"]), {storeId, action, args});
+      };
+      return storeActions;
+    }, {});
+    return actionFns;
+  }, {});
+}
+
 export function createStore(state, actions={}) {
 
   invariant(
@@ -94,14 +111,14 @@ export function createStore(state, actions={}) {
     },
 
     observeEvents(callback) {
-      return state.reference(["events"]).observe((newState) => {
-        return callback(newState.get("events").last());
+      return state.reference(["events"]).observe((newEvents) => {
+        return callback(newEvents.last());
       });
     },
 
     observe(storeId, callback) {
-      return state.reference(["log"]).observe((newState) => {
-        const lastLog = newState.get("log").last();
+      return state.reference(["log"]).observe((newLog) => {
+        const lastLog = newLog.last();
         if (lastLog.storeId === storeId) {
           callback(lastLog);
         }
@@ -109,23 +126,11 @@ export function createStore(state, actions={}) {
     },
 
     onSwap(callback) {
-      return state.on('swap', callback);
+      state.on('swap', callback);
+      return [state, callback];
     },
 
-    actions: Object.keys(actions).reduce((actionFns, storeId) => {
-      actionFns[storeId] = Object.keys(actions[storeId]).reduce((storeActions, action) => {
-        storeActions[action] = (...args) => {
-          actions[storeId][action].call(
-            null,
-            state.cursor(["stores", storeId]),
-            ...args
-          );
-          logAction(state.cursor(["log"]), {storeId, action, args});
-        };
-        return storeActions;
-      }, {});
-      return actionFns;
-    }, {})
+    actions: createActions(state, actions)
   };
 }
 
@@ -142,6 +147,7 @@ export function createState(initialState={}) {
 }
 
 export default {
+  createActions,
   createState,
   createStore
 };

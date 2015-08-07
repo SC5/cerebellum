@@ -1,8 +1,9 @@
 import APIClient from './api-client';
 import createFetch from './fetch';
 import {createCacheKey} from './utils';
+import observers from './observers';
 
-function API(store, config={}) {
+function API(store, state, config={}) {
 
   function markCacheStale(storeId, params={}) {
     return store.cursor(["_cerebellum"]).update(previousState => {
@@ -90,7 +91,11 @@ function API(store, config={}) {
     });
   });
 
-  const {fetch, fetchAll} = createFetch(store, config);
+  const {fetch, fetchAll} = createFetch(store, state, config);
+  // we need to keep track of observers so that previous observers
+  // are unsubscribed on hot reload
+  const observe = observers.init("cerebellum/api");
+  observe.addMany(unobserves);
 
   return {
     unobserve: () => unobserves.forEach(fn => fn()),

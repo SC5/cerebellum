@@ -4,23 +4,17 @@ import without from 'lodash/array/without';
 import omit from 'lodash/object/omit';
 import APIClient from './api-client';
 import {createCacheKey, idOrRoot} from './utils';
+import {createActions} from './store';
+import CollectionActions from './collection-actions';
 import 'native-promise-only';
 
-function createFetch(store, userConfig={}) {
-
-  const actionsIncluded = Object.keys(userConfig.stores).every(storeId => {
-    return !!store.actions[storeId];
-  });
-
-  invariant(
-    actionsIncluded,
-    "Some of your stores are missing required collection actions"
-  );
+function createFetch(store, state, userConfig={}) {
 
   const config = {
     allowedStatuses: [401, 403],
     retries: 1,
     retryAgainAfter: 5000,
+    stores: {},
     ...userConfig
   };
 
@@ -199,8 +193,9 @@ function createFetch(store, userConfig={}) {
           result = fetchAPI(storeId, fetchOptions)
           // handling side-effects
           .then((response) => {
-            // replace
-            store.actions[storeId].replace(fetchOptions, response);
+            // replace whole collection after fetch
+            const actions = createActions(state, {[storeId]: CollectionActions()});
+            actions[storeId].replace(fetchOptions, response);
 
             markCacheFresh(storeId, fetchOptions);
             markInitialFetchDone(storeId, fetchOptions);

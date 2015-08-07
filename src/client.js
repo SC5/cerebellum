@@ -56,10 +56,10 @@ function Client(state, options={}, routeContext={}) {
       state,
       actions
     );
-    api = API(store, createAPIConfig(options));
+    api = API(store, state, createAPIConfig(options));
 
     setTimeout(function() {
-      state.forceHasSwapped();
+      state.forceHasSwapped(state.current, state.current);
     }, 0);
 
     // state.on("swap", (newState, oldState, path) => {
