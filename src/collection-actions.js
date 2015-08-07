@@ -8,49 +8,43 @@ function CollectionActions() {
     // optimistic create
     create(state, params, props) {
       const path = idOrRoot(params);
-      return state.update(previousState => {
-        return {
-          ...(previousState || {}),
-          [path]: [...(previousState[path] || []), {...props}]
-        };
-      });
+      return {
+        ...(state || {}),
+        [path]: [...(state[path] || []), {...props}]
+      };
     },
 
     // optimistic update
     update(state, params, props) {
       const path = idOrRoot(params);
-      return state.update(previousState => {
-        const newCollection = [...(previousState[path] || [])];
-        if (newCollection.length) {
-          const index = findIndex(newCollection, (model) => {
-            return model.id === params.id;
-          });
-          if (index !== -1) {
-            newCollection[index] = {...newCollection[index], ...props};
-          }
+      const newCollection = [...(state[path] || [])];
+      if (newCollection.length) {
+        const index = findIndex(newCollection, (model) => {
+          return model.id === params.id;
+        });
+        if (index !== -1) {
+          newCollection[index] = {...newCollection[index], ...props};
         }
-        return {
-          ...previousState,
-          [path]: newCollection
-        };
-      });
+      }
+      return {
+        ...state,
+        [path]: newCollection
+      };
     },
 
     // optimistic delete
     remove(state, params) {
       const path = idOrRoot(params);
-      return state.update(previousState => {
-        const newCollection = [...(previousState[path] || [])];
-        if (newCollection.length) {
-          remove(newCollection, (model) => {
-            return model.id === params.id;
-          });
-        }
-        return {
-          ...previousState,
-          [path]: newCollection
-        };
-      });
+      const newCollection = [...(state[path] || [])];
+      if (newCollection.length) {
+        remove(newCollection, (model) => {
+          return model.id === params.id;
+        });
+      }
+      return {
+        ...state,
+        [path]: newCollection
+      };
     },
 
     // replace state, fetch will call this
@@ -58,30 +52,29 @@ function CollectionActions() {
     // component re-renders
     replace(state, params, props) {
       const path = idOrRoot(params);
-      return state.update((previousState) => {
-        // replace single item inside collection
-        if (typeof params === "object" && params.id) {
-          const newCollection = [...(previousState[path] || [])];
-          if (newCollection.length) {
-            const index = findIndex(newCollection, (model) => {
-              return model.id === params.id;
-            });
-            if (index !== -1) {
-              newCollection[index] = props;
-            }
+
+      // replace single item inside collection
+      if (typeof params === "object" && params.id) {
+        const newCollection = [...(state[path] || [])];
+        if (newCollection.length) {
+          const index = findIndex(newCollection, (model) => {
+            return model.id === params.id;
+          });
+          if (index !== -1) {
+            newCollection[index] = props;
           }
-          return {
-            ...previousState,
-            [path]: newCollection
-          };
-        // replace whole collection
-        } else {
-          return {
-            ...previousState,
-            [path]: props
-          };
         }
-      });
+        return {
+          ...state,
+          [path]: newCollection
+        };
+      // replace whole collection
+      } else {
+        return {
+          ...state,
+          [path]: props
+        };
+      }
     },
 
     // expire does not modify state directly but we need it as an action

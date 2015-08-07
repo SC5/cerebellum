@@ -51,11 +51,13 @@ export function createActions(state, actions={}) {
   return Object.keys(actions).reduce((actionFns, storeId) => {
     actionFns[storeId] = Object.keys(actions[storeId]).reduce((storeActions, action) => {
       storeActions[action] = (...args) => {
-        actions[storeId][action].call(
-          null,
-          state.cursor(["stores", storeId]),
-          ...args
-        );
+        state.cursor(["stores", storeId]).update(oldState => {
+          return actions[storeId][action].call(
+            null,
+            oldState,
+            ...args
+          );
+        });
         logAction(state.cursor(["log"]), {storeId, action, args});
       };
       return storeActions;
