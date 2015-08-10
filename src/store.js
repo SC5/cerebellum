@@ -1,3 +1,4 @@
+import Immutable from 'immutable';
 import immstruct from 'immstruct';
 import invariant from 'invariant';
 
@@ -138,8 +139,8 @@ export function createStore(state, actions={}) {
 
 export function createState(initialState={}) {
   const state = (new immstruct.Immstruct()).get({
-    events: [],
-    log: [],
+    events: Immutable.List(),
+    log: Immutable.List(),
     stores: {}
   });
   Object.keys(initialState).forEach(storeId => {
