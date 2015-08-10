@@ -8,6 +8,7 @@ import API from './api';
 import {createStore} from './store';
 import utils from './utils';
 import validateOptions from './validate-options';
+import observers from './observers';
 
 function defaultRouteHandler(handler, params) {
   return handler.apply(this, params);
@@ -128,9 +129,16 @@ function Client(state, options={}, routeContext={}) {
 
     // invoke initialize callback if it was provided in options
     if (initializeCallback && typeof initializeCallback === "function") {
+
+      const swapObserver = observers.init("cerebellum/client");
+      const swapCallback = (fn) => {
+        swapObserver.add(store.onSwap(fn));
+      };
+
       initializeCallback.call(null, {
         router: page,
-        store: store
+        store: store,
+        onStateChange: swapCallback
       });
     }
 
