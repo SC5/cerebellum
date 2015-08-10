@@ -21,6 +21,7 @@ function createAPIConfig(options={}) {
   }
 
   apiConfig.stores = options.stores;
+  apiConfig.reactions = options.reactions;
 
   return apiConfig;
 }
@@ -38,6 +39,7 @@ function Client(state, options={}, routeContext={}) {
     initialize: initializeCallback,
     initStore = true,
     initialUrl,
+    reactions = {},
     render,
     routes,
     routeHandler = defaultRouteHandler,
@@ -58,13 +60,10 @@ function Client(state, options={}, routeContext={}) {
     );
     api = API(store, state, createAPIConfig(options));
 
+    // force swap when loaded (to ensure render after hot reload)
     setTimeout(function() {
       state.forceHasSwapped(state.current, state.current);
     }, 0);
-
-    // state.on("swap", (newState, oldState, path) => {
-    //   clientEvents.trigger("swap", newState, oldState, path);
-    // });
   }
 
   DOMReady.then(() => {

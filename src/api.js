@@ -92,10 +92,25 @@ function API(store, state, config={}) {
   });
 
   const {fetch, fetchAll} = createFetch(store, state, config);
+
   // we need to keep track of observers so that previous observers
   // are unsubscribed on hot reload
   const observe = observers.init("cerebellum/api");
   observe.addMany(unobserves);
+
+  observe.add(
+    store.observeEvents((lastEvent) => {
+      const storeReactions = config.reactions[lastEvent.storeId];
+      const eventReactions = Object.keys(storeReactions).filter(regExp => {
+        return lastEvent.title.match(regExp);
+      });
+      if (storeReactions && eventReactions) {
+        eventReactions.forEach(reaction => {
+          return storeReactions[reaction](store.actions, lastEvent);
+        });
+      }
+    })
+  );
 
   return {
     unobserve: () => unobserves.forEach(fn => fn()),
