@@ -47,6 +47,10 @@ class Store {
     // concurrent fetch calls to same API
     this.ongoingFetches = [];
 
+    // used for tracking temporarily disabled caches, failing fetch request
+    // with non-allowed status code gets cached disabled for 60 seconds
+    this.temporarilyDisabledCaches = [];
+
     // empty instances of stores
     // clone actual instances from these
     this.stores = {};
@@ -321,6 +325,24 @@ class Store {
     });
   }
 
+  disableCache(id, key) {
+    this.temporarilyDisabledCaches.push({
+      id: id,
+      key: key,
+      disabledUntil: (new Date()).getTime() + 60000 // disable for 60 seconds
+    });
+  }
+
+  temporarilyDisabledCache(id, key) {
+    return this.temporarilyDisabledCaches.filter(cache => {
+      return (
+        cache.disabledUntil > (new Date()).getTime() &&
+        cache.id === id &&
+        cache.key === key
+      );
+    })[0];
+  }
+
   createFetchOptions() {
     const fetchOptions = {};
     if (this.cookie) {
@@ -351,8 +373,12 @@ class Store {
       }
       const cachedStore = this.cached.cursor([storeId, cacheKey]);
       const ongoingFetch = this.ongoingFetch(storeId, cacheKey);
+      const temporarilyDisabledCache = this.temporarilyDisabledCache(storeId, cacheKey);
 
-      if (!this.isCacheStale(storeId, cacheKey) && cachedStore.size) {
+      if (
+        (!this.isCacheStale(storeId, cacheKey) && cachedStore.size) || 
+        temporarilyDisabledCache
+      ) {
         return resolve(cachedStore);
       } else {
         if (instantResolve) {
@@ -380,11 +406,14 @@ class Store {
               }
             } else {
               // reject for other statuses so error can be catched in router
+
+              // disable cache for 60 seconds so we don't get in re-render loop
+              this.disableCache(storeId, cacheKey);
+
               if (instantResolve) {
-                return this.trigger(`fetch:${storeId}`, err);
-              } else {
-                return reject(err);
+                this.trigger(`fetch:${storeId}`, err);
               }
+              return reject(err);
             }
           });
 
