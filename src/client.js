@@ -32,6 +32,10 @@ function createStoreOptions(options={}) {
     storeOptions.allowedStatusCodes = options.allowedStatusCodes;
   }
 
+  if (typeof options.identifier !== "undefined") {
+    storeOptions.identifier = options.identifier;
+  }
+
   return storeOptions;
 }
 
@@ -51,7 +55,8 @@ function Client(options={}, routeContext={}) {
     routes,
     routeHandler = defaultRouteHandler,
     storeId,
-    stores
+    stores,
+    identifier
   } = options;
 
   const clientEvents = extend({}, Events);

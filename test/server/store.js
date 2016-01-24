@@ -140,8 +140,8 @@ describe('Store', function() {
       var store = new Store(stores);
       should.exist(store.stores.model);
       should.exist(store.stores.collection);
-      should.exist(store.cached.cursor().get("model"));
-      should.exist(store.cached.cursor().get("collection"));
+      should.exist(store.cached.get("model"));
+      should.exist(store.cached.get("collection"));
     });
 
     it('options are handled', function() {
@@ -170,9 +170,9 @@ describe('Store', function() {
       var store = new Store(stores);
 
       var lambo = store.get("car");
-      lambo.set("manufacturer", "Lamborghini (not set by fetch)");
-      lambo.set("model", "Aventador");
-      store.cached.cursor().setIn(["car","Lamborghini"], Immutable.fromJS(lambo.toJSON()));
+      lambo = lambo.set("manufacturer", "Lamborghini (not set by fetch)");
+      lambo = lambo.set("model", "Aventador");
+      store.cached = store.cached.setIn(["car","Lamborghini"], Immutable.fromJS(lambo.toJSON()));
 
       return store.fetch("car", {id: "Lamborghini"}).then(function(result) {
         result.get("manufacturer").should.be.equal("Lamborghini (not set by fetch)");
@@ -187,7 +187,7 @@ describe('Store', function() {
       original.storeOptions = {};
       var originalJSON = original.toJSON();
       return store.fetch("collection").then(function(result) {
-        result.deref().toJSON().should.eql(originalJSON);
+        result.toJSON().should.eql(originalJSON);
       });
     });
 
@@ -213,7 +213,7 @@ describe('Store', function() {
     it('should cache store value after server fetch', function() {
       var store = new Store(stores);
       return store.fetch("car", {id: "Ferrari"}).then(function(result) {
-        Immutable.is(store.cached.cursor().getIn(["car","Ferrari"]), result).should.equal(true);
+        Immutable.is(store.cached.getIn(["car","Ferrari"]), result).should.equal(true);
       });
     });
 
@@ -234,14 +234,14 @@ describe('Store', function() {
     it('should use model\'s storeOptions.id as fallback cacheKey', function() {
       var store = new Store(stores);
       return store.fetch("model", {id: "example"}).then(function() {
-        should.exist(store.cached.cursor().getIn(["model","example"]));
+        should.exist(store.cached.getIn(["model","example"]));
       });
     });
 
     it('cacheKey should be optional for collections', function() {
       var store = new Store(stores);
       return store.fetch("noCacheKeyCollection").then(function() {
-        should.exist(store.cached.cursor().getIn(["noCacheKeyCollection","/"]));
+        should.exist(store.cached.getIn(["noCacheKeyCollection","/"]));
       });
     });
 
@@ -331,11 +331,11 @@ describe('Store', function() {
       });
       store.bootstrap(json);
 
-      store.cached.cursor("car").size.should.be.equal(2);
-      store.cached.cursor("model").size.should.be.equal(0);
-      store.cached.cursor("collection").size.should.be.equal(0);
-      store.cached.cursor().getIn(["car","Ferrari"]).get("manufacturer").should.be.equal("Ferrari");
-      store.cached.cursor().getIn(["car","Lotus"]).get("manufacturer").should.be.equal("Lotus");
+      store.cached.get("car").size.should.be.equal(2);
+      store.cached.get("model").size.should.be.equal(0);
+      store.cached.get("collection").size.should.be.equal(0);
+      store.cached.getIn(["car","Ferrari"]).get("manufacturer").should.be.equal("Ferrari");
+      store.cached.getIn(["car","Lotus"]).get("manufacturer").should.be.equal("Lotus");
     });
   });
 
@@ -379,9 +379,9 @@ describe('Store', function() {
 
       return store.fetch("car", {id: "Ferrari"}).then(function() {
         store.on("update:car", function(err, options) {
-          should.not.exist(store.cached.cursor().getIn(["car","Ferrari"]));
+          should.not.exist(store.cached.getIn(["car","Ferrari"]));
         });
-        should.exist(store.cached.cursor().getIn(["car","Ferrari"]));
+        should.exist(store.cached.getIn(["car","Ferrari"]));
         store.dispatch("update", "car", {id: "Ferrari"}, {
           manufacturer: "Ferrari",
           model: "F40"
@@ -394,11 +394,11 @@ describe('Store', function() {
 
       return store.fetch("car", {id: "Ferrari"}).then(function() {
         store.on("update:car", function(err, options) {
-          should.exist(store.cached.cursor().getIn(["car","Ferrari"]));
+          should.exist(store.cached.getIn(["car","Ferrari"]));
           store.clearCache("car");
           should.exist(store.staleCaches.car.Ferrari);
         });
-        should.exist(store.cached.cursor().getIn(["car","Ferrari"]));
+        should.exist(store.cached.getIn(["car","Ferrari"]));
         store.dispatch("update", "car", {id: "Ferrari"}, {
           manufacturer: "Ferrari",
           model: "F40"
@@ -413,8 +413,8 @@ describe('Store', function() {
         if (err) {
           done(err);
         }
-        should.exist(store.cached.cursor().getIn(["car","Ferrari"]));
-        store.cached.cursor().get("cars").should.not.be.empty;
+        should.exist(store.cached.getIn(["car","Ferrari"]));
+        store.cached.get("cars").should.not.be.empty;
         var carIsStale = store.staleCaches.some(function(cache) {
           return cache.id === "car" && cache.key === "Ferrari";
         })
@@ -430,8 +430,8 @@ describe('Store', function() {
         store.fetch("car", {id: "Ferrari"}),
         store.fetch("cars")
       ]).then(function() {
-        should.exist(store.cached.cursor().getIn(["car","Ferrari"]));
-        store.cached.cursor().get("cars").should.not.be.empty;
+        should.exist(store.cached.getIn(["car","Ferrari"]));
+        store.cached.get("cars").should.not.be.empty;
         store.dispatch("update", "car", {id: "Ferrari"}, {model: "F40"});
       });
     });
@@ -594,7 +594,7 @@ describe('Store', function() {
         done();
       });
       return store.fetch("car", {id: "Ferrari"}).then(function(result) {
-        store.cached.cursor().getIn(["car","Ferrari"]).get("manufacturer").should.be.equal("Ferrari");
+        store.cached.getIn(["car","Ferrari"]).get("manufacturer").should.be.equal("Ferrari");
         store.dispatch("expire", "car", {id: "Ferrari"});
       });
     });

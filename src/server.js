@@ -26,6 +26,7 @@ function Server(options={}, routeContext={}) {
     staticFiles,
     storeId,
     stores,
+    identifier,
     autoToJSON = true,
     initStore = true,
     allowedStatusCodes = null
@@ -73,7 +74,8 @@ function Server(options={}, routeContext={}) {
         if (initStore) {
           const options = {
             autoToJSON: autoToJSON,
-            allowedStatusCodes: allowedStatusCodes
+            allowedStatusCodes: allowedStatusCodes,
+            identifier: identifier
           };
 
           if (req.headers.cookie) {

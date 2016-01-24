@@ -1,5 +1,15 @@
 # Changelog
 
+## Version `master`
+
+## Breaking changes
+
+- Dropped immstruct, Cerebellum's store now uses vanilla Immutable.js
+
+## Other changes
+- Added `identifier` option, by default Store assumes that `id` field defines the identity of model. It's currently only used in Store's fetch when merging changes.
+- Store's fetch now properly merges Immutable.Lists, only changed items will be re-rendered when using pure render mixin with React.
+
 ## Version `0.9.0`
 
 ### Breaking changes

@@ -20,7 +20,7 @@ Cerebellum is designed for single-page apps that need search engine visibility. 
 * Automatic SEO, no hacks needed for server side rendering.
 * You can easily make apps that work even when JavaScript is disabled in browser
 * Fast initial load for mobile clients, browser bootstraps from server state and continues as a single-page app without any extra configuration.
-* Store state is maintained in [immstruct](https://github.com/omniscientjs/immstruct)
+* Store state is maintained in [Immutable.js](http://facebook.github.io/immutable-js/)
 * Can be used with any framework that provides rendering for both server and client. [React.js](http://facebook.github.io/react/) recommended, see [examples/static-pages](https://github.com/SC5/cerebellum/tree/master/examples/static-pages).
 
 ## Data flow
@@ -99,9 +99,7 @@ Store will automatically snapshot its state on server and client will bootstrap 
 
 ### Models and Collections are immutable
 
-All your stores are read only, state is stored in [immstruct](https://github.com/omniscientjs/immstruct). All mutations are handled by Store with **create**, **update**, **delete** and **expire** events.
-
-Using immstruct enables automatic optimistic updates and rollbacks (when sync fails) for stores.
+All your stores are read only, state is stored in [Immutable.js](http://facebook.github.io/immutable-js/). All mutations are handled by Store with **create**, **update**, **delete** and **expire** events.
 
 ### Fetching data inside routes
 

@@ -1,7 +1,5 @@
 import 'native-promise-only';
-import Cursor from 'immutable/contrib/cursor';
 import Events from 'vertebrae/events';
-import immstruct from 'immstruct';
 import Immutable from 'immutable';
 import {extend} from 'vertebrae/utils';
 import createCacheKey from './store/create-cache-key';
@@ -26,6 +24,12 @@ class Store {
       this.autoClearCaches = options.autoClearCaches;
     }
 
+    // which key should be considered as model identity when merging collections
+    this.identifier = "id";
+    if (typeof options.identifier !== "undefined") {
+      this.identifier = options.identifier;
+    }
+
     // allowed status codes
     // return empty store with these status codes
     // this allows us to show proper data for logged-in users
@@ -37,7 +41,7 @@ class Store {
 
     // used for storing all collection/model data, fetch returns
     // fresh cursors to this structure
-    this.cached = (new immstruct.Immstruct()).get();
+    this.cached = Immutable.Map();
 
     // used for tracking stale caches, it's better to mark caches stale
     // and re-fetch than mutating the cache and causing glitchy re-renders
@@ -58,7 +62,7 @@ class Store {
     Object.keys(stores).forEach(storeId => {
       const store = stores[storeId];
       this.stores[storeId] = new store();
-      this.cached.cursor().set(storeId, Immutable.fromJS({}));
+      this.cached = this.cached.set(storeId, Immutable.fromJS({}));
     });
 
     // allows Store to be used as event bus
@@ -86,13 +90,13 @@ class Store {
       }
 
       // optimistic create, save previous value for error scenario
-      const previousCollection = this.cached.cursor([storeId, cacheKey]).deref();
-      this.cached.cursor([storeId, cacheKey]).update(collection => {
+      const previousCollection = this.cached.getIn([storeId, cacheKey]);
+      this.cached = this.cached.updateIn([storeId, cacheKey], collection => {
         const newItem = Immutable.fromJS(attrs);
         if (collection) {
           return collection.push(newItem);
         } else {
-          return new Immutable.List([newItem]);
+          return Immutable.List([newItem]);
         }
       });
 
@@ -114,7 +118,7 @@ class Store {
           error.store = storeId;
           error.result = response;
           error.options = storeOptions;
-          this.cached.cursor([storeId, cacheKey]).update(() => previousCollection);
+          this.cached = this.cached.updateIn([storeId, cacheKey], () => previousCollection);
           this.trigger(`create:${storeId}`, error);
           reject(error);
         }
@@ -134,9 +138,11 @@ class Store {
       }
 
       // optimistic update, save previous value for error scenario
-      const previousModel = this.cached.cursor([storeId, cacheKey]).deref();
+      const previousModel = this.cached.getIn([storeId, cacheKey]);
       if (previousModel) {
-        this.cached.cursor([storeId, cacheKey]).merge(attrs);
+        this.cached = this.cached.updateIn([storeId, cacheKey], previous => {
+          return previous.merge(attrs);
+        });
       }
 
       store.save(attrs, {
@@ -158,7 +164,7 @@ class Store {
           error.result = response;
           error.options = storeOptions;
           if (previousModel) {
-            this.cached.cursor([storeId, cacheKey]).merge(previousModel);
+            this.cached = this.cached.updateIn([storeId, cacheKey], () => previousModel);
           }
           this.trigger(`update:${storeId}`, error);
           reject(error);
@@ -181,8 +187,8 @@ class Store {
       }
 
       // optimistic delete, save previous value for error scenario
-      const previousModel = this.cached.cursor([storeId, cacheKey]).deref();
-      this.cached.cursor(storeId).delete(cacheKey);
+      const previousModel = this.cached.getIn([storeId, cacheKey]);
+      this.cached = this.cached.deleteIn([storeId, cacheKey]);
 
       store.destroy({
         success: (model, response) => {
@@ -202,7 +208,7 @@ class Store {
           error.store = storeId;
           error.result = response;
           error.options = storeOptions;
-          this.cached.cursor(storeId).set(cacheKey, previousModel);
+          this.cached = this.cached.setIn([storeId, cacheKey], previousModel);
           this.trigger(`delete:${storeId}`, error);
           reject(error);
         }
@@ -237,12 +243,12 @@ class Store {
 
     if (cacheKey) {
       // mark cache as stale
-      if (this.cached.cursor().getIn([storeId, cacheKey])) {
+      if (this.cached.getIn([storeId, cacheKey])) {
         this.staleCaches.push({id: storeId, key: cacheKey});
       }
     } else {
       // mark all caches for store stale if cacheKey doesn't exist
-      Object.keys(this.cached.cursor().getIn([storeId]).toJS()).forEach(key => {
+      Object.keys(this.cached.getIn([storeId]).toJS()).forEach(key => {
         this.staleCaches.push({id: storeId, key: key});
       });
     }
@@ -255,7 +261,7 @@ class Store {
       if (relatedCacheKeys.length) {
         relatedCacheKeys.forEach(id => {
           const key = relatedCaches[id];
-          if (this.cached.cursor().getIn([id, key])) {
+          if (this.cached.getIn([id, key])) {
             this.staleCaches.push({id: id, key: key});
           }
         });
@@ -273,15 +279,16 @@ class Store {
       return;
     }
 
-    return this.cached.cursor().update(() => {
+    this.cached = this.cached.update(() => {
       return Immutable.fromJS(JSON.parse(json));
     });
+    return this.cached;
   }
 
   // export snapshot of current caches to JSON
   snapshot() {
     return JSON.stringify(
-      this.cached.cursor().toJSON()
+      this.cached.toJSON()
     );
   }
 
@@ -371,25 +378,25 @@ class Store {
       if (!cacheKey) {
         reject(new Error(`Store ${storeId} has no cacheKey method.`));
       }
-      const cachedStore = this.cached.cursor([storeId, cacheKey]);
+      const cachedStore = this.cached.getIn([storeId, cacheKey]);
       const ongoingFetch = this.ongoingFetch(storeId, cacheKey);
       const temporarilyDisabledCache = this.temporarilyDisabledCache(storeId, cacheKey);
 
       if (
-        (!this.isCacheStale(storeId, cacheKey) && cachedStore.size) || 
+        (!this.isCacheStale(storeId, cacheKey) && cachedStore && cachedStore.size) || 
         temporarilyDisabledCache
       ) {
         return resolve(cachedStore);
       } else {
         if (instantResolve) {
-          resolve(Cursor.from(Immutable.fromJS(store.toJSON())));
+          resolve(Immutable.fromJS(store.toJSON()));
         }
         if (ongoingFetch) {
           return ongoingFetch.promise.then(() => {
             if (instantResolve) {
-              return this.trigger(`fetch:${storeId}`, null, this.cached.cursor([storeId, cacheKey]));
+              return this.trigger(`fetch:${storeId}`, null, this.cached.getIn([storeId, cacheKey]));
             } else {
-              return resolve(this.cached.cursor([storeId, cacheKey]));
+              return resolve(this.cached.getIn([storeId, cacheKey]));
             }
           });
         } else {
@@ -398,7 +405,7 @@ class Store {
               return statusCode === err.status;
             });
             if (allowedStatus) {
-              const result = Cursor.from(Immutable.fromJS(store.toJSON()));
+              const result = Immutable.fromJS(store.toJSON());
               if (instantResolve) {
                 return this.trigger(`fetch:${storeId}`, null, result);
               } else {
@@ -420,21 +427,37 @@ class Store {
           this.markFetchOngoing(storeId, cacheKey, fetchPromise);
 
           return fetchPromise.then(() => {
-            const result = this.cached.cursor([storeId, cacheKey]).update(previousStore => {
-              // TODO: figure out to a way to use merge here, it's problematic
-              // with updates where List item is deleted
-              // if (previousStore) {
-              //   return previousStore.merge(store.toJSON());
-              // } else {
-              //   return Immutable.fromJS(store.toJSON());
-              // }
-              return Immutable.fromJS(store.toJSON());
+            this.cached = this.cached.updateIn([storeId, cacheKey], previousStore => {
+              // TODO: optimize
+              if (previousStore) {
+                const identifier = this.identifier;
+                const nextStore = Immutable.fromJS(store.toJSON());
+                const mergedStore = previousStore.reduce((result, prevItem) => {
+                  const index = nextStore.findIndex((item) => {
+                    return item.get(identifier) === prevItem.get(identifier);
+                  });
+                  if (index !== -1) {
+                    return result.set(result.indexOf(prevItem), prevItem.merge(nextStore.get(index)));
+                  } else {
+                    return result.delete(result.indexOf(prevItem));
+                  }
+                }, previousStore).concat(
+                  nextStore.filterNot((nextItem) => {
+                    return previousStore.find((item) => {
+                      return item.get(identifier) === nextItem.get(identifier);
+                    });
+                  })
+                );
+                return mergedStore;
+              } else {
+                return Immutable.fromJS(store.toJSON());
+              }
             });
 
             if (instantResolve) {
-              this.trigger(`fetch:${storeId}`, null, result);
+              this.trigger(`fetch:${storeId}`, null, this.cached.getIn([storeId, cacheKey]));
             } else {
-              resolve(result);
+              resolve(this.cached.getIn([storeId, cacheKey]));
             }
 
             this.markCacheFresh(storeId, cacheKey);
