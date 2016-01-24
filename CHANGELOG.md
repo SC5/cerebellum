@@ -1,6 +1,6 @@
 # Changelog
 
-## Version `master`
+## Version `0.10.0`
 
 ## Breaking changes
 
