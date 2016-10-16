@@ -1,5 +1,18 @@
 # Changelog
 
+## master
+
+## Breaking changes
+
+- Changed store's event signature, from now on store events will be returned with signature `event, error, options`.
+Options will always include `store` key that has the related storeId as value.
+This change will make listening changes much easier as you can now re-render by just listening `expire` instead of adding separate `expire:storeId` listeners for all stores.
+Events are still dispatched with previous signature `event:storeId, error, extra` but that format will be removed in the future.
+
+## Other changes
+
+- Fixed array merging in store's fetch
+
 ## Version `0.10.0`
 
 ## Breaking changes
@@ -7,6 +20,7 @@
 - Dropped immstruct, Cerebellum's store now uses vanilla Immutable.js
 
 ## Other changes
+
 - Added `identifier` option, by default Store assumes that `id` field defines the identity of model. It's currently only used in Store's fetch when merging changes.
 - Store's fetch now properly merges Immutable.Lists, only changed items will be re-rendered when using pure render mixin with React.
 

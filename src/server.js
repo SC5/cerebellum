@@ -107,10 +107,10 @@ function Server(options={}, routeContext={}) {
           if (app.routeError && typeof app.routeError === "function") {
             app.routeError(error);
           }
-          if (error.status && error.data) {
-            return res.send(`Error ${error.status}: ${error.data}`);
+          if (error.status && error.stack) {
+            return res.send(`Error ${error.status}: ${error.stack}`);
           } else {
-            return res.send(`Error: ${error.stack}`);
+            return res.send(`Error: ${error.stack} ${JSON.stringify(error)}`);
           }
         });
       });

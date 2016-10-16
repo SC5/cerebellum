@@ -85,7 +85,9 @@ class Store {
       const cacheKey = createCacheKey(store);
 
       if (typeof store.create !== "function") {
+        // DEPRECATED
         this.trigger(`create:${storeId}`, new Error("You can call create only for collections!"));
+        this.trigger("create", new Error("You can call create only for collections!"), {store: storeId});
         return;
       }
 
@@ -105,7 +107,14 @@ class Store {
           if (this.autoClearCaches) {
             this.clearCache(storeId, store.storeOptions);
           }
+          // DEPRECATED
           this.trigger(`create:${storeId}`, null, {
+            cacheKey: cacheKey,
+            store: storeId,
+            options: storeOptions,
+            result: model
+          });
+          this.trigger("create", null, {
             cacheKey: cacheKey,
             store: storeId,
             options: storeOptions,
@@ -119,7 +128,9 @@ class Store {
           error.result = response;
           error.options = storeOptions;
           this.cached = this.cached.updateIn([storeId, cacheKey], () => previousCollection);
+          // DEPRECATED
           this.trigger(`create:${storeId}`, error);
+          this.trigger("create", error, {store: storeId});
           reject(error);
         }
       });
@@ -133,7 +144,9 @@ class Store {
       const cacheKey = createCacheKey(store);
 
       if (typeof store.save !== "function") {
+        // DEPRECATED
         this.trigger(`update:${storeId}`, new Error("You can call update only for models!"));
+        this.trigger("update", new Error("You can call update only for models!"), {store: storeId});
         return;
       }
 
@@ -150,7 +163,14 @@ class Store {
           if (this.autoClearCaches) {
             this.clearCache(storeId, store.storeOptions);
           }
+          // DEPRECATED
           this.trigger(`update:${storeId}`, null, {
+            cacheKey: createCacheKey(store),
+            store: storeId,
+            options: storeOptions,
+            result: model
+          });
+          this.trigger("update", null, {
             cacheKey: createCacheKey(store),
             store: storeId,
             options: storeOptions,
@@ -166,7 +186,9 @@ class Store {
           if (previousModel) {
             this.cached = this.cached.updateIn([storeId, cacheKey], () => previousModel);
           }
+          // DEPRECATED
           this.trigger(`update:${storeId}`, error);
+          this.trigger("update", error, {store: storeId});
           reject(error);
         }
       });
@@ -182,7 +204,9 @@ class Store {
       const cacheKey = createCacheKey(store);
 
       if (typeof store.destroy !== "function") {
+        // DEPRECATED
         this.trigger(`delete:${storeId}`, new Error("You can call destroy only for models!"));
+        this.trigger("delete", new Error("You can call destroy only for models!"), {store: storeId});
         return;
       }
 
@@ -195,7 +219,14 @@ class Store {
           if (this.autoClearCaches) {
             this.clearCache(storeId, store.storeOptions);
           }
+          // DEPRECATED
           this.trigger(`delete:${storeId}`, null, {
+            cacheKey: createCacheKey(store),
+            store: storeId,
+            options: storeOptions,
+            result: model
+          });
+          this.trigger("delete", null, {
             cacheKey: createCacheKey(store),
             store: storeId,
             options: storeOptions,
@@ -209,7 +240,9 @@ class Store {
           error.result = response;
           error.options = storeOptions;
           this.cached = this.cached.setIn([storeId, cacheKey], previousModel);
+          // DEPRECATED
           this.trigger(`delete:${storeId}`, error);
+          this.trigger("delete", error, {store: storeId});
           reject(error);
         }
       });
@@ -221,7 +254,13 @@ class Store {
       const store = this.get(storeId);
       store.storeOptions = extend({}, storeOptions);
       this.clearCache(storeId, store.storeOptions);
+      // DEPRECATED
       this.trigger(`expire:${storeId}`, null, {
+        cacheKey: createCacheKey(store),
+        store: storeId,
+        options: storeOptions
+      });
+      this.trigger("expire", null, {
         cacheKey: createCacheKey(store),
         store: storeId,
         options: storeOptions
@@ -383,8 +422,7 @@ class Store {
       const temporarilyDisabledCache = this.temporarilyDisabledCache(storeId, cacheKey);
 
       if (
-        (!this.isCacheStale(storeId, cacheKey) && cachedStore && cachedStore.size) || 
-        temporarilyDisabledCache
+        (!this.isCacheStale(storeId, cacheKey) && cachedStore && cachedStore.size) || temporarilyDisabledCache
       ) {
         return resolve(cachedStore);
       } else {
@@ -394,6 +432,8 @@ class Store {
         if (ongoingFetch) {
           return ongoingFetch.promise.then(() => {
             if (instantResolve) {
+              this.trigger("fetch", null, {store: storeId, value: this.cached.getIn([storeId, cacheKey])});
+              // DEPRECATED
               return this.trigger(`fetch:${storeId}`, null, this.cached.getIn([storeId, cacheKey]));
             } else {
               return resolve(this.cached.getIn([storeId, cacheKey]));
@@ -407,6 +447,8 @@ class Store {
             if (allowedStatus) {
               const result = Immutable.fromJS(store.toJSON());
               if (instantResolve) {
+                this.trigger("fetch", null, {store: storeId, value: result});
+                // DEPRECATED
                 return this.trigger(`fetch:${storeId}`, null, result);
               } else {
                 return resolve(result);
@@ -418,7 +460,9 @@ class Store {
               this.disableCache(storeId, cacheKey);
 
               if (instantResolve) {
+                // DEPRECATED
                 this.trigger(`fetch:${storeId}`, err);
+                this.trigger("fetch", err, {store: storeId});
               }
               return reject(err);
             }
@@ -430,32 +474,38 @@ class Store {
             this.cached = this.cached.updateIn([storeId, cacheKey], previousStore => {
               // TODO: optimize
               if (previousStore) {
-                const identifier = this.identifier;
                 const nextStore = Immutable.fromJS(store.toJSON());
-                const mergedStore = previousStore.reduce((result, prevItem) => {
-                  const index = nextStore.findIndex((item) => {
-                    return item.get(identifier) === prevItem.get(identifier);
-                  });
-                  if (index !== -1) {
-                    return result.set(result.indexOf(prevItem), prevItem.merge(nextStore.get(index)));
-                  } else {
-                    return result.delete(result.indexOf(prevItem));
-                  }
-                }, previousStore).concat(
-                  nextStore.filterNot((nextItem) => {
-                    return previousStore.find((item) => {
-                      return item.get(identifier) === nextItem.get(identifier);
+                if (previousStore.findIndex) {
+                  const identifier = this.identifier;
+                  const mergedStore = previousStore.reduce((result, prevItem) => {
+                    const index = nextStore.findIndex((item) => {
+                      return item.get(identifier) === prevItem.get(identifier);
                     });
-                  })
-                );
-                return mergedStore;
+                    if (index !== -1) {
+                      return result.set(result.indexOf(prevItem), prevItem.merge(nextStore.get(index)));
+                    } else {
+                      return result.delete(result.indexOf(prevItem));
+                    }
+                  }, previousStore).concat(
+                    nextStore.filterNot((nextItem) => {
+                      return previousStore.find((item) => {
+                        return item.get(identifier) === nextItem.get(identifier);
+                      });
+                    })
+                  );
+                  return mergedStore;
+                } else {
+                  return previousStore.mergeDeep(nextStore);
+                }
               } else {
                 return Immutable.fromJS(store.toJSON());
               }
             });
 
             if (instantResolve) {
+              // DEPRECATED
               this.trigger(`fetch:${storeId}`, null, this.cached.getIn([storeId, cacheKey]));
+              this.trigger("fetch", null, {store: storeId, value: this.cached.getIn([storeId, cacheKey])});
             } else {
               resolve(this.cached.getIn([storeId, cacheKey]));
             }
